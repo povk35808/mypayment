@@ -23,20 +23,24 @@
                         glass: 'rgba(255, 255, 255, 0.7)',
                         glassBorder: 'rgba(255, 255, 255, 0.5)',
                         primary: {
-                            500: '#00D2FF',
-                            600: '#3A7BD5',
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
                         }
                     },
                     boxShadow: {
                         '3d': '0 10px 40px -10px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.5) inset',
                         '3d-hover': '0 20px 50px -10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.6) inset',
-                        'inner-light': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.3)',
-                        'input': 'inset 2px 2px 5px rgba(0,0,0,0.05), inset -2px -2px 5px rgba(255,255,255,0.8)',
+                        'soft': '0 10px 40px -10px rgba(0, 0, 0, 0.08)',
+                        'glow': '0 0 20px rgba(16, 185, 129, 0.2)',
                     },
                     animation: {
                         'float': 'float 6s ease-in-out infinite',
                         'blob': 'blob 7s infinite',
                         'pop': 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                        'scaleIn': 'scaleIn 0.2s ease-out forwards',
                     },
                     keyframes: {
                         float: {
@@ -52,6 +56,10 @@
                         pop: {
                             '0%': { opacity: '0', transform: 'scale(0.9)' },
                             '100%': { opacity: '1', transform: 'scale(1)' },
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.9)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
                         }
                     }
                 }
@@ -71,14 +79,8 @@
 
     <style>
         body {
-            background-color: #e0e5ec;
-            background-image: 
-                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
-            background-size: cover;
-            background-attachment: fixed;
-            color: #1f2937;
+            font-family: 'Kantumruy Pro', sans-serif;
+            background-color: #f0fdfa;
             -webkit-tap-highlight-color: transparent;
         }
         
@@ -110,7 +112,6 @@
             box-shadow: 0 2px 10px rgba(58, 123, 213, 0.3);
         }
 
-        /* Modern Input Styles */
         .modern-input {
             transition: all 0.3s ease;
         }
@@ -119,9 +120,11 @@
             box-shadow: 0 8px 20px rgba(16, 185, 129, 0.1);
             border-color: #10b981;
         }
-
+        
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        input[type="file"] { display: none; }
     </style>
 </head>
 <body>
@@ -132,8 +135,28 @@
         
         // --- Firebase Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, updateProfile, sendPasswordResetEmail, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            signOut, 
+            onAuthStateChanged,
+            sendEmailVerification,
+            updateProfile,
+            sendPasswordResetEmail,
+            setPersistence,
+            browserLocalPersistence
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { 
+            getDatabase,
+            ref,
+            set,
+            push,
+            onValue,
+            remove,
+            update,
+            get 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // --- Configuration ---
         const firebaseConfig = {
@@ -157,24 +180,28 @@
         const CLOUD_NAME = 'ds4z6hf7s';
         const UPLOAD_PRESET = 'mypayment';
 
-        // --- Utils ---
+        // --- Helpers ---
         const formatMoney = (amount, currency) => {
             const num = parseFloat(amount);
             if (isNaN(num)) return '0.00';
-            return currency === 'USD' 
-                ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num)
-                : new Intl.NumberFormat('km-KH', { style: 'currency', currency: 'KHR' }).format(num);
+            if (currency === 'USD') {
+                return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+            } else {
+                return new Intl.NumberFormat('km-KH', { style: 'currency', currency: 'KHR' }).format(num);
+            }
         };
-
+        
         const uploadToCloudinary = async (file) => {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('upload_preset', UPLOAD_PRESET);
             formData.append('cloud_name', CLOUD_NAME);
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
-            const data = await res.json();
-            if(data.error) throw new Error(data.error.message);
-            return data.secure_url;
+            try {
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if(data.error) throw new Error(data.error.message);
+                return data.secure_url;
+            } catch (error) { console.error("Upload failed", error); throw error; }
         };
 
         const CATEGORIES = [
@@ -207,7 +234,30 @@
             return <span style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: svgHtml }} />;
         };
 
-        // --- Main App ---
+        // --- Custom Confirm Modal ---
+        const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, type = 'danger' }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+                    <div className="bg-white rounded-[2rem] p-6 w-full max-w-xs relative z-10 shadow-2xl animate-scaleIn border border-white/50">
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg ${type === 'danger' ? 'bg-red-50 text-red-500 shadow-red-100' : 'bg-blue-50 text-blue-500 shadow-blue-100'}`}>
+                            <Icon name={type === 'danger' ? 'alert-triangle' : 'info'} className="w-8 h-8" />
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-800 mb-2 text-center">{title}</h3>
+                        <p className="text-slate-500 text-sm mb-6 text-center leading-relaxed">{message}</p>
+                        <div className="flex gap-3">
+                            <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors">បោះបង់</button>
+                            <button onClick={() => { onConfirm(); onClose(); }} className={`flex-1 py-3 rounded-xl text-white font-bold transition-colors shadow-lg active:scale-95 ${type === 'danger' ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' : 'bg-blue-500 hover:bg-blue-600 shadow-blue-500/30'}`}>
+                                {type === 'danger' ? 'យល់ព្រម' : 'Yes'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- App Component ---
         const App = () => {
             const [user, setUser] = useState(null);
             const [loading, setLoading] = useState(true);
@@ -223,10 +273,11 @@
 
             useEffect(() => {
                 if (user) {
-                    return onValue(ref(db, `artifacts/${appId}/users/${user.uid}/profile`), (snapshot) => {
+                    const unsub = onValue(ref(db, `artifacts/${appId}/users/${user.uid}/profile`), (snapshot) => {
                         setUserProfile(snapshot.val());
                         setLoading(false);
                     });
+                    return () => unsub();
                 }
             }, [user]);
 
@@ -378,6 +429,9 @@
             const [expenses, setExpenses] = useState([]);
             const [loading, setLoading] = useState(true);
             const [editItem, setEditItem] = useState(null); 
+            // Modal State
+            const [modal, setModal] = useState({ show: false, title: '', message: '', type: 'danger', action: null });
+            
             const isAdmin = userProfile?.role === 'admin';
 
             useEffect(() => {
@@ -390,14 +444,29 @@
                 return () => unsub();
             }, [user]);
 
-            const handleDelete = async (id) => {
-                if(confirm("លុបមែនទេ?")) await remove(ref(db, `artifacts/${appId}/users/${user.uid}/expenses/${id}`));
+            const triggerConfirm = (title, message, action, type='danger') => {
+                setModal({ show: true, title, message, action, type });
+            };
+
+            const handleDelete = (id) => {
+                triggerConfirm('លុបចំណាយ?', 'តើអ្នកពិតជាចង់លុបចំណាយនេះមែនទេ?', async () => {
+                    await remove(ref(db, `artifacts/${appId}/users/${user.uid}/expenses/${id}`));
+                });
             };
 
             const handleEditClick = (item) => { setEditItem(item); setView('add'); };
 
             return (
                 <div className="max-w-md mx-auto min-h-screen bg-white shadow-2xl overflow-hidden flex flex-col relative">
+                    <ConfirmModal 
+                        isOpen={modal.show} 
+                        onClose={() => setModal({...modal, show: false})} 
+                        onConfirm={modal.action} 
+                        title={modal.title} 
+                        message={modal.message} 
+                        type={modal.type} 
+                    />
+
                     <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-blue-500 to-purple-600 rounded-b-[40px] z-0"></div>
                     
                     {/* Header */}
@@ -421,8 +490,8 @@
                         {view === 'home' && <HomeView expenses={expenses} onDelete={handleDelete} onEdit={handleEditClick} loading={loading} setView={setView} />}
                         {view === 'add' && <AddEditView user={user} setView={setView} editItem={editItem} setEditItem={setEditItem} />}
                         {view === 'reports' && <ReportsView expenses={expenses} />}
-                        {view === 'admin' && isAdmin && <AdminPanel />}
-                        {view === 'profile' && <ProfileSettings user={user} userProfile={userProfile} />}
+                        {view === 'admin' && isAdmin && <AdminPanel triggerConfirm={triggerConfirm} />}
+                        {view === 'profile' && <ProfileSettings user={user} userProfile={userProfile} triggerConfirm={triggerConfirm} />}
                     </div>
 
                     {/* 3D Floating Bottom Nav */}
@@ -438,47 +507,30 @@
         };
 
         // --- Improved Profile Settings ---
-        const ProfileSettings = ({ user, userProfile }) => {
+        const ProfileSettings = ({ user, userProfile, triggerConfirm }) => {
             const [loading, setLoading] = useState(false);
-            const [showLogout, setShowLogout] = useState(false);
             const fileRef = useRef(null);
 
             const handleUpload = async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-                setLoading(true);
-                try {
-                    const url = await uploadToCloudinary(file);
-                    await updateProfile(user, { photoURL: url });
-                    await update(ref(db, `artifacts/${appId}/users/${user.uid}/profile`), { photoURL: url });
-                    alert("បានប្តូររូបភាពជោគជ័យ!");
-                } catch (err) { alert("បរាជ័យ៖ " + err.message); } finally { setLoading(false); }
+                
+                triggerConfirm('ប្តូររូបភាព?', 'តើអ្នកចង់ប្តូររូបភាព Profile មែនទេ?', async () => {
+                    setLoading(true);
+                    try {
+                        const url = await uploadToCloudinary(file);
+                        await updateProfile(user, { photoURL: url });
+                        await update(ref(db, `artifacts/${appId}/users/${user.uid}/profile`), { photoURL: url });
+                    } catch (err) { alert("បរាជ័យ៖ " + err.message); } finally { setLoading(false); }
+                }, 'info');
             };
 
             const confirmLogout = () => {
-                signOut(auth);
+                triggerConfirm('ចាកចេញ?', 'តើអ្នកពិតជាចង់ចាកចេញពីគណនីនេះមែនទេ?', () => signOut(auth));
             };
 
             return (
-                <div className="animate-pop pb-20 px-4 pt-16">
-                    {/* Logout Modal */}
-                    {showLogout && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowLogout(false)}></div>
-                            <div className="bg-white rounded-3xl p-6 w-full max-w-xs relative z-10 shadow-2xl animate-pop text-center">
-                                <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
-                                    <Icon name="log-out" className="w-8 h-8" />
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-800 mb-2">ចាកចេញ?</h3>
-                                <p className="text-slate-500 text-sm mb-6">តើអ្នកពិតជាចង់ចាកចេញពីគណនីនេះមែនទេ?</p>
-                                <div className="flex gap-3">
-                                    <button onClick={() => setShowLogout(false)} className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors">ថយក្រោយ</button>
-                                    <button onClick={confirmLogout} className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30">ចាកចេញ</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
+                <div className="animate-pop pb-20 px-2 pt-16">
                     <div className="bg-white rounded-[2.5rem] shadow-xl p-6 relative mt-12 text-center border border-slate-50">
                         {/* Avatar */}
                         <div className="absolute -top-16 left-1/2 -translate-x-1/2">
@@ -501,27 +553,27 @@
                             <h2 className="text-2xl font-bold text-slate-800 mb-1">{userProfile?.displayName || 'User'}</h2>
                             <p className="text-slate-500 font-medium text-sm mb-6 bg-slate-50 px-3 py-1 rounded-full inline-block">{userProfile?.email}</p>
                             
-                            <div className="flex justify-center gap-3 mb-8">
-                                <div className={`px-4 py-2 rounded-2xl text-sm font-bold flex items-center gap-2 border ${userProfile?.role === 'admin' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-600 border-slate-100'}`}>
-                                    <Icon name="shield" className="w-4 h-4" />
-                                    {userProfile?.role === 'admin' ? 'Admin' : 'User'}
+                            <div className="grid grid-cols-2 gap-3 mb-8">
+                                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center">
+                                    <span className="text-xs text-slate-400 font-bold uppercase mb-1">តួនាទី</span>
+                                    <div className={`flex items-center gap-1.5 font-bold ${userProfile?.role === 'admin' ? 'text-indigo-600' : 'text-slate-700'}`}>
+                                        <Icon name="shield" className="w-4 h-4" />
+                                        {userProfile?.role === 'admin' ? 'Admin' : 'User'}
+                                    </div>
                                 </div>
-                                <div className={`px-4 py-2 rounded-2xl text-sm font-bold flex items-center gap-2 border ${userProfile?.status === 'frozen' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
-                                    <Icon name="activity" className="w-4 h-4" />
-                                    {userProfile?.status === 'frozen' ? 'Frozen' : 'Active'}
+                                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center">
+                                    <span className="text-xs text-slate-400 font-bold uppercase mb-1">ស្ថានភាព</span>
+                                    <div className={`flex items-center gap-1.5 font-bold ${userProfile?.status === 'frozen' ? 'text-red-500' : 'text-emerald-600'}`}>
+                                        <Icon name="activity" className="w-4 h-4" />
+                                        {userProfile?.status === 'frozen' ? 'Frozen' : 'Active'}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-3">
-                                <button className="w-full py-4 rounded-2xl bg-slate-50 text-slate-700 font-bold flex items-center justify-between px-6 hover:bg-slate-100 transition-all group">
-                                    <span className="flex items-center gap-3"><Icon name="settings" className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors"/> ការកំណត់</span>
-                                    <Icon name="chevron-right" className="w-4 h-4 text-slate-300" />
-                                </button>
-                                <button onClick={() => setShowLogout(true)} className="w-full py-4 rounded-2xl bg-red-50 text-red-500 font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition-all active:scale-95 border border-red-100">
-                                    <Icon name="log-out" className="w-5 h-5" />
-                                    ចាកចេញពីគណនី
-                                </button>
-                            </div>
+                            <button onClick={confirmLogout} className="w-full py-4 rounded-2xl bg-red-50 text-red-500 font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition-all active:scale-95 border border-red-100 shadow-sm">
+                                <Icon name="log-out" className="w-5 h-5" />
+                                ចាកចេញពីគណនី
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -697,7 +749,7 @@
             </div>
         );
 
-        const AdminPanel = () => {
+        const AdminPanel = ({ triggerConfirm }) => {
             const [users, setUsers] = useState([]);
             const [loading, setLoading] = useState(true);
             useEffect(() => {
@@ -707,9 +759,15 @@
                 });
                 return () => unsub();
             }, []);
-            const toggleStatus = async (u) => {
-                if(confirm("ប្តូរស្ថានភាព?")) await update(ref(db, `artifacts/${appId}/users/${u.uid}/profile`), { status: u.status === 'frozen' ? 'active' : 'frozen' });
+            
+            const toggleStatus = (u) => {
+                const action = u.status === 'frozen' ? 'បើកដំណើរការវិញ' : 'បង្កក';
+                const type = u.status === 'frozen' ? 'info' : 'danger';
+                triggerConfirm(`${action}គណនី?`, `តើអ្នកពិតជាចង់${action}គណនី ${u.displayName} មែនទេ?`, async () => {
+                    await update(ref(db, `artifacts/${appId}/users/${u.uid}/profile`), { status: u.status === 'frozen' ? 'active' : 'frozen' });
+                }, type);
             };
+
             return (
                 <div className="animate-pop pt-20 px-4 pb-24">
                     <h2 className="text-2xl font-bold text-white mb-6 drop-shadow-md">Admin Panel</h2>
