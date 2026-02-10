@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>កម្មវិធីកត់ត្រាចំណាយ - Expense Tracker</title>
+    <title>Expense Tracker 3D</title>
     
     <!-- Google Fonts: Kantumruy Pro -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,6 +12,52 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kantumruy Pro', 'sans-serif'],
+                    },
+                    colors: {
+                        glass: 'rgba(255, 255, 255, 0.7)',
+                        glassBorder: 'rgba(255, 255, 255, 0.5)',
+                        primary: {
+                            500: '#00D2FF',
+                            600: '#3A7BD5',
+                        }
+                    },
+                    boxShadow: {
+                        '3d': '0 10px 40px -10px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.5) inset',
+                        '3d-hover': '0 20px 50px -10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.6) inset',
+                        'inner-light': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.3)',
+                        'input': 'inset 2px 2px 5px rgba(0,0,0,0.05), inset -2px -2px 5px rgba(255,255,255,0.8)',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'blob': 'blob 7s infinite',
+                        'pop': 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        pop: {
+                            '0%': { opacity: '0', transform: 'scale(0.9)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -25,85 +71,69 @@
 
     <style>
         body {
-            font-family: 'Kantumruy Pro', sans-serif;
-            background-color: #f0fdf4; /* Green-50 */
+            background-color: #e0e5ec;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-size: cover;
+            background-attachment: fixed;
+            color: #1f2937;
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* Animations */
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        @keyframes pulse-red {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
         }
 
-        .animate-slide-up {
-            animation: slideUp 0.4s ease-out forwards;
+        .glass-input {
+            background: rgba(243, 244, 246, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s;
+        }
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
+            border-color: #3b82f6;
         }
 
-        .animate-fade-in {
-            animation: fadeIn 0.3s ease-out forwards;
+        .btn-3d {
+            background: linear-gradient(145deg, #3A7BD5, #00D2FF);
+            box-shadow: 0 4px 15px rgba(58, 123, 213, 0.4);
+            transition: all 0.2s;
         }
-        
-        .pulse-alert {
-            animation: pulse-red 2s infinite;
+        .btn-3d:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 10px rgba(58, 123, 213, 0.3);
         }
 
-        /* Hide Scrollbar */
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
+        /* Modern Input Styles */
+        .modern-input {
+            transition: all 0.3s ease;
         }
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        .modern-input:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.1);
+            border-color: #10b981;
         }
-        
-        /* Custom Inputs */
-        .custom-input:focus {
-            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
-        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-        // --- Imports (Simulated for CDN) ---
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useRef } = React;
         
-        // --- Firebase Modular SDK via CDN ---
+        // --- Firebase Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            signOut, 
-            onAuthStateChanged,
-            sendEmailVerification,
-            updateProfile,
-            sendPasswordResetEmail,
-            setPersistence,
-            browserLocalPersistence
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { 
-            getDatabase,
-            ref,
-            set,
-            push,
-            onValue,
-            remove,
-            update,
-            get // Added 'get' for reading once
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, updateProfile, sendPasswordResetEmail, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // --- Configuration ---
         const firebaseConfig = {
@@ -120,114 +150,97 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
-        
         const rawAppId = "default-app-id"; 
         const appId = rawAppId.replace(/[.#$[\]]/g, '_');
 
-        // --- Constants ---
         const EXCHANGE_RATE = 4100;
+        const CLOUD_NAME = 'ds4z6hf7s';
+        const UPLOAD_PRESET = 'mypayment';
 
+        // --- Utils ---
         const formatMoney = (amount, currency) => {
             const num = parseFloat(amount);
             if (isNaN(num)) return '0.00';
-            if (currency === 'USD') {
-                return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
-            } else {
-                return new Intl.NumberFormat('km-KH', { style: 'currency', currency: 'KHR' }).format(num);
-            }
+            return currency === 'USD' 
+                ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num)
+                : new Intl.NumberFormat('km-KH', { style: 'currency', currency: 'KHR' }).format(num);
+        };
+
+        const uploadToCloudinary = async (file) => {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
+            formData.append('cloud_name', CLOUD_NAME);
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+            const data = await res.json();
+            if(data.error) throw new Error(data.error.message);
+            return data.secure_url;
         };
 
         const CATEGORIES = [
-            { id: 'food', name: 'អាហារ', icon: 'coffee', color: 'bg-orange-100 text-orange-600' },
-            { id: 'transport', name: 'ធ្វើដំណើរ', icon: 'car', color: 'bg-blue-100 text-blue-600' },
-            { id: 'shopping', name: 'ទិញទំនិញ', icon: 'shopping-bag', color: 'bg-pink-100 text-pink-600' },
-            { id: 'bills', name: 'ទឹកភ្លើង/អ៊ីនធឺណិត', icon: 'zap', color: 'bg-yellow-100 text-yellow-600' },
-            { id: 'entertainment', name: 'ការកម្សាន្ត', icon: 'gamepad-2', color: 'bg-purple-100 text-purple-600' },
-            { id: 'health', name: 'សុខភាព', icon: 'heart-pulse', color: 'bg-green-100 text-green-600' },
-            { id: 'other', name: 'ផ្សេងៗ (សរសេរដៃ)', icon: 'pen-tool', color: 'bg-gray-100 text-gray-600' },
+            { id: 'food', name: 'អាហារ', icon: 'coffee', color: 'text-orange-500', bg: 'bg-orange-100' },
+            { id: 'transport', name: 'ធ្វើដំណើរ', icon: 'car', color: 'text-blue-500', bg: 'bg-blue-100' },
+            { id: 'shopping', name: 'ទិញទំនិញ', icon: 'shopping-bag', color: 'text-pink-500', bg: 'bg-pink-100' },
+            { id: 'bills', name: 'វិក្កយបត្រ', icon: 'zap', color: 'text-yellow-500', bg: 'bg-yellow-100' },
+            { id: 'entertainment', name: 'កម្សាន្ត', icon: 'gamepad-2', color: 'text-purple-500', bg: 'bg-purple-100' },
+            { id: 'health', name: 'សុខភាព', icon: 'heart-pulse', color: 'text-rose-500', bg: 'bg-rose-100' },
+            { id: 'other', name: 'ផ្សេងៗ', icon: 'pen-tool', color: 'text-gray-500', bg: 'bg-gray-100' },
         ];
 
-        // --- Icons Component ---
+        // --- Components ---
         const Icon = ({ name, className }) => {
+            const [svgHtml, setSvgHtml] = useState('');
             useEffect(() => {
-                if (window.lucide) {
-                    window.lucide.createIcons();
-                }
-            }, [name]);
-            return <i data-lucide={name} className={className}></i>;
+                const loadIcon = () => {
+                    if (window.lucide && window.lucide.icons && window.lucide.createElement) {
+                        const iconKey = name.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
+                        const iconNode = window.lucide.icons[iconKey];
+                        if (iconNode) {
+                            const element = window.lucide.createElement(iconNode);
+                            element.setAttribute('class', className);
+                            setSvgHtml(element.outerHTML);
+                        }
+                    } else setTimeout(loadIcon, 50);
+                };
+                loadIcon();
+            }, [name, className]);
+            return <span style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: svgHtml }} />;
         };
 
-        // --- Main App Component ---
+        // --- Main App ---
         const App = () => {
             const [user, setUser] = useState(null);
             const [loading, setLoading] = useState(true);
-            const [userProfile, setUserProfile] = useState(null); // Store role & status
+            const [userProfile, setUserProfile] = useState(null);
 
             useEffect(() => {
                 const unsubscribe = onAuthStateChanged(auth, (u) => {
                     setUser(u);
-                    if (!u) {
-                        setLoading(false);
-                        setUserProfile(null);
-                    }
+                    if (!u) { setLoading(false); setUserProfile(null); }
                 });
                 return () => unsubscribe();
             }, []);
 
-            // Real-time listener for User Profile (Status & Role)
             useEffect(() => {
                 if (user) {
-                    const profileRef = ref(db, `artifacts/${appId}/users/${user.uid}/profile`);
-                    const unsub = onValue(profileRef, (snapshot) => {
-                        const data = snapshot.val();
-                        setUserProfile(data);
+                    return onValue(ref(db, `artifacts/${appId}/users/${user.uid}/profile`), (snapshot) => {
+                        setUserProfile(snapshot.val());
                         setLoading(false);
                     });
-                    return () => unsub();
                 }
             }, [user]);
 
-            if (loading) {
-                return (
-                    <div className="flex items-center justify-center min-h-screen bg-green-50">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
-                    </div>
-                );
-            }
-
-            // --- BLOCKING LOGIC: If status is 'frozen' ---
-            if (user && userProfile && userProfile.status === 'frozen') {
-                return <FrozenScreen />;
-            }
-
-            return user ? <Dashboard user={user} isAdmin={userProfile?.role === 'admin'} /> : <AuthScreen />;
-        };
-
-        // --- Frozen Screen (Blocking UI) ---
-        const FrozenScreen = () => {
-            return (
-                <div className="min-h-screen bg-red-50 flex flex-col items-center justify-center p-6 text-center animate-fade-in">
-                    <div className="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full border-2 border-red-100">
-                        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 pulse-alert text-red-600">
-                            <Icon name="lock" className="w-10 h-10" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-red-600 mb-2">គណនីត្រូវបានបង្កក!</h2>
-                        <p className="text-gray-600 mb-6 text-sm leading-relaxed">
-                            គណនីរបស់អ្នកត្រូវបានផ្អាកជាបណ្តោះអាសន្នដោយ Admin។ អ្នកមិនអាចប្រើប្រាស់កម្មវិធីបានទេ។
-                        </p>
-                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
-                            <p className="text-xs text-gray-500 mb-1">ទំនាក់ទំនងដើម្បីដោះស្រាយ:</p>
-                            <a href="https://t.me/MMKDaro" target="_blank" className="flex items-center justify-center gap-2 text-blue-600 font-bold hover:underline">
-                                <Icon name="send" className="w-4 h-4" />
-                                t.me/MMKDaro
-                            </a>
-                        </div>
-                        <button onClick={() => signOut(auth)} className="w-full py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition-colors">
-                            ចាកចេញ (Sign Out)
-                        </button>
+            if (loading) return (
+                <div className="flex items-center justify-center min-h-screen bg-slate-900">
+                    <div className="relative">
+                        <div className="w-20 h-20 rounded-full border-4 border-blue-500/30 animate-ping absolute"></div>
+                        <div className="w-20 h-20 rounded-full border-4 border-blue-500 border-t-transparent animate-spin relative z-10"></div>
                     </div>
                 </div>
             );
+
+            if (user && userProfile?.status === 'frozen') return <FrozenScreen />;
+            return user ? <Dashboard user={user} userProfile={userProfile} /> : <AuthScreen />;
         };
 
         // --- Auth Screen ---
@@ -235,91 +248,121 @@
             const [isRegister, setIsRegister] = useState(false);
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState('');
+            const [confirmPassword, setConfirmPassword] = useState('');
             const [name, setName] = useState('');
             const [error, setError] = useState('');
             const [loading, setLoading] = useState(false);
             const [msg, setMsg] = useState('');
+            const [showPass, setShowPass] = useState(false);
+            const [showConfirmPass, setShowConfirmPass] = useState(false);
+            const [imagePreview, setImagePreview] = useState(null);
+            const [profileImage, setProfileImage] = useState(null);
+            const fileInputRef = useRef(null);
+
+            const handleImageChange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    setProfileImage(file);
+                    const reader = new FileReader();
+                    reader.onloadend = () => setImagePreview(reader.result);
+                    reader.readAsDataURL(file);
+                }
+            };
 
             const handleSubmit = async (e) => {
                 e.preventDefault();
-                setError(''); setMsg(''); setLoading(true);
+                setError(''); setMsg('');
+                if (isRegister && password !== confirmPassword) return setError("ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ");
+                setLoading(true);
                 try {
                     await setPersistence(auth, browserLocalPersistence);
                     if (isRegister) {
                         const cred = await createUserWithEmailAndPassword(auth, email, password);
-                        await updateProfile(cred.user, { displayName: name });
+                        let photoURL = "";
+                        if (profileImage) photoURL = await uploadToCloudinary(profileImage);
+                        await updateProfile(cred.user, { displayName: name, photoURL });
                         
-                        // NEW LOGIC: Check if ANY users exist
-                        // If users node is empty (or doesn't exist), this is the first user => Admin
-                        // Else => User
-                        const usersRef = ref(db, `artifacts/${appId}/users`);
-                        const snapshot = await get(usersRef);
-                        const role = snapshot.exists() ? 'user' : 'admin';
+                        const snap = await get(ref(db, `artifacts/${appId}/users`));
+                        const role = (!snap.exists()) ? 'admin' : 'user';
 
-                        // Create Profile with Status & Role
                         await set(ref(db, `artifacts/${appId}/users/${cred.user.uid}/profile`), {
-                            displayName: name, 
-                            email, 
-                            uid: cred.user.uid,
-                            role: role, 
-                            status: 'active', // Default status is active
-                            createdAt: new Date().toISOString()
+                            displayName: name, email, uid: cred.user.uid, role, status: 'active', photoURL, createdAt: new Date().toISOString()
                         });
-                        
                         await sendEmailVerification(cred.user);
-                        setMsg(`គណនីត្រូវបានបង្កើតជា ${role === 'admin' ? 'Admin' : 'User'}! សូមពិនិត្យមើល Email របស់អ្នក។`);
-                        setIsRegister(false);
+                        setMsg(`គណនីបានបង្កើតជា ${role.toUpperCase()}!`);
+                        setIsRegister(false); setEmail(''); setPassword(''); setName(''); setImagePreview(null);
                     } else {
                         await signInWithEmailAndPassword(auth, email, password);
                     }
-                } catch (err) {
-                    let message = err.message;
-                    if(message.includes('auth/invalid-credential')) message = "អ៊ីមែល ឬ ពាក្យសម្ងាត់មិនត្រឹមត្រូវ";
-                    setError(message);
-                } finally {
-                    setLoading(false);
-                }
+                } catch (err) { setError(err.message.includes('auth') ? "អ៊ីមែល ឬ ពាក្យសម្ងាត់មិនត្រឹមត្រូវ" : err.message); }
+                finally { setLoading(false); }
             };
 
             return (
-                <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-emerald-600 to-teal-500">
-                    <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
-                        <div className="p-8 text-center bg-emerald-50">
-                            <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg text-white">
-                                <Icon name="wallet" className="w-8 h-8" />
-                            </div>
-                            <h1 className="text-2xl font-bold text-emerald-800">កត់ត្រាចំណាយ</h1>
-                            <p className="text-emerald-600 text-sm">គ្រប់គ្រងហិរញ្ញវត្ថុរបស់អ្នក</p>
+                <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+                    <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-blob"></div>
+                    <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-blob animation-delay-2000"></div>
+                    <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-blob animation-delay-4000"></div>
+
+                    <div className="glass-panel w-full max-w-sm rounded-3xl shadow-3d relative z-10 animate-pop overflow-hidden">
+                        <div className="p-8 text-center">
+                            {isRegister ? (
+                                <div onClick={() => fileInputRef.current.click()} className="mx-auto w-24 h-24 relative cursor-pointer group mb-4">
+                                    <div className="w-full h-full rounded-full bg-white/50 border-4 border-white shadow-lg overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105">
+                                        {imagePreview ? <img src={imagePreview} className="w-full h-full object-cover" /> : <Icon name="camera" className="w-10 h-10 text-gray-400" />}
+                                    </div>
+                                    <div className="absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full text-white shadow-md"><Icon name="upload" className="w-4 h-4" /></div>
+                                    <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" style={{display:'none'}} />
+                                </div>
+                            ) : (
+                                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-400 to-purple-600 rounded-3xl rotate-12 flex items-center justify-center shadow-lg animate-float">
+                                    <Icon name="wallet" className="w-12 h-12 text-white -rotate-12" />
+                                </div>
+                            )}
+                            <h2 className="text-3xl font-bold text-gray-800 mb-1">{isRegister ? 'បង្កើតគណនី' : 'សូមស្វាគមន៍'}</h2>
+                            <p className="text-gray-500 text-sm">{isRegister ? 'ចាប់ផ្តើមដំណើរហិរញ្ញវត្ថុរបស់អ្នក' : 'គ្រប់គ្រងចំណូលចំណាយរបស់អ្នក'}</p>
                         </div>
-                        <div className="p-8">
-                            {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg flex gap-2"><Icon name="alert-circle" className="w-4 h-4 mt-0.5"/>{error}</div>}
-                            {msg && <div className="mb-4 p-3 bg-green-50 text-green-600 text-sm rounded-lg flex gap-2"><Icon name="check-circle" className="w-4 h-4 mt-0.5"/>{msg}</div>}
-                            
+
+                        <div className="px-8 pb-8">
+                            {error && <div className="mb-4 p-3 bg-red-100/80 border-l-4 border-red-500 text-red-700 text-xs rounded-r-lg font-medium flex items-center gap-2"><Icon name="alert-circle" className="w-4 h-4"/>{error}</div>}
+                            {msg && <div className="mb-4 p-3 bg-green-100/80 border-l-4 border-green-500 text-green-700 text-xs rounded-r-lg font-medium flex items-center gap-2"><Icon name="check-circle" className="w-4 h-4"/>{msg}</div>}
+
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 {isRegister && (
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">ឈ្មោះ (ជាភាសាអង់គ្លេស)</label>
-                                        <input type="text" required className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none custom-input" placeholder="Dara Sok" value={name} onChange={e=>setName(e.target.value)} />
+                                    <div className="relative group">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500"><Icon name="user" className="w-5 h-5"/></div>
+                                        <input type="text" required className="glass-input w-full pl-10 pr-4 py-3.5 rounded-xl text-sm outline-none placeholder-gray-400 font-medium text-gray-700" placeholder="ឈ្មោះរបស់អ្នក" value={name} onChange={e=>setName(e.target.value)} />
                                     </div>
                                 )}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">អ៊ីមែល</label>
-                                    <input type="email" required className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none custom-input" placeholder="email@example.com" value={email} onChange={e=>setEmail(e.target.value)} />
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500"><Icon name="mail" className="w-5 h-5"/></div>
+                                    <input type="email" required className="glass-input w-full pl-10 pr-4 py-3.5 rounded-xl text-sm outline-none placeholder-gray-400 font-medium text-gray-700" placeholder="example@email.com" value={email} onChange={e=>setEmail(e.target.value)} />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">ពាក្យសម្ងាត់</label>
-                                    <input type="password" required minLength="6" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none custom-input" placeholder="••••••••" value={password} onChange={e=>setPassword(e.target.value)} />
-                                    <div className="mt-2 text-[10px] text-gray-500 italic">
-                                        * គណនីដំបូងគេនឹងក្លាយជា Admin ដោយស្វ័យប្រវត្តិ
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500"><Icon name="lock" className="w-5 h-5"/></div>
+                                    <input type={showPass ? "text" : "password"} required className="glass-input w-full pl-10 pr-10 py-3.5 rounded-xl text-sm outline-none placeholder-gray-400 font-medium text-gray-700" placeholder="ពាក្យសម្ងាត់" value={password} onChange={e=>setPassword(e.target.value)} />
+                                    <button type="button" onClick={() => setShowPass(!showPass)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-blue-600 transition-colors z-20 cursor-pointer">
+                                        <Icon name={showPass ? "eye-off" : "eye"} className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                {isRegister && (
+                                    <div className="relative group">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500"><Icon name="check-square" className="w-5 h-5"/></div>
+                                        <input type={showConfirmPass ? "text" : "password"} required className="glass-input w-full pl-10 pr-10 py-3.5 rounded-xl text-sm outline-none placeholder-gray-400 font-medium text-gray-700" placeholder="បញ្ជាក់ពាក្យសម្ងាត់" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} />
+                                        <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-blue-600 transition-colors z-20 cursor-pointer">
+                                            <Icon name={showConfirmPass ? "eye-off" : "eye"} className="w-5 h-5" />
+                                        </button>
                                     </div>
-                                </div>
-                                <button disabled={loading} className="w-full py-4 bg-emerald-600 text-white font-bold rounded-xl shadow-lg hover:bg-emerald-700 transition-all active:scale-95 flex justify-center">
-                                    {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : (isRegister ? 'ចុះឈ្មោះ' : 'ចូលប្រើ')}
+                                )}
+
+                                <button disabled={loading} className="w-full py-4 btn-3d text-white font-bold rounded-xl mt-6 flex justify-center text-sm uppercase tracking-wide">
+                                    {loading ? <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin"></div> : (isRegister ? 'ចុះឈ្មោះ' : 'ចូលប្រើ')}
                                 </button>
                             </form>
-                            <div className="mt-6 text-center text-sm text-gray-600">
+
+                            <div className="mt-6 text-center text-sm text-gray-500">
                                 {isRegister ? "មានគណនីរួចហើយ?" : "មិនទាន់មានគណនី?"} 
-                                <button onClick={()=>setIsRegister(!isRegister)} className="ml-1 text-emerald-600 font-bold hover:underline">
+                                <button onClick={()=>{setIsRegister(!isRegister); setError(''); setMsg('');}} className="ml-1 text-blue-600 font-bold hover:underline">
                                     {isRegister ? 'ចូលប្រើ' : 'បង្កើតថ្មី'}
                                 </button>
                             </div>
@@ -329,337 +372,273 @@
             );
         };
 
-        // --- Dashboard ---
-        const Dashboard = ({ user, isAdmin }) => {
+        // --- Dashboard (Modern Glass UI) ---
+        const Dashboard = ({ user, userProfile }) => {
             const [view, setView] = useState('home');
             const [expenses, setExpenses] = useState([]);
             const [loading, setLoading] = useState(true);
             const [editItem, setEditItem] = useState(null); 
+            const isAdmin = userProfile?.role === 'admin';
 
             useEffect(() => {
-                const dataRef = ref(db, `artifacts/${appId}/users/${user.uid}/expenses`);
-                const unsub = onValue(dataRef, (snapshot) => {
+                const unsub = onValue(ref(db, `artifacts/${appId}/users/${user.uid}/expenses`), (snapshot) => {
                     const val = snapshot.val();
-                    if (val) {
-                        const list = Object.entries(val).map(([k, v]) => ({
-                            id: k, ...v, dateObj: new Date(v.date)
-                        }));
-                        list.sort((a,b) => b.dateObj - a.dateObj);
-                        setExpenses(list);
-                    } else {
-                        setExpenses([]);
-                    }
+                    const list = val ? Object.entries(val).map(([k, v]) => ({ id: k, ...v, dateObj: new Date(v.date) })).sort((a,b) => b.dateObj - a.dateObj) : [];
+                    setExpenses(list);
                     setLoading(false);
                 });
                 return () => unsub();
             }, [user]);
 
             const handleDelete = async (id) => {
-                if(confirm("តើអ្នកពិតជាចង់លុបមែនទេ?")) {
-                    await remove(ref(db, `artifacts/${appId}/users/${user.uid}/expenses/${id}`));
-                }
+                if(confirm("លុបមែនទេ?")) await remove(ref(db, `artifacts/${appId}/users/${user.uid}/expenses/${id}`));
             };
 
-            const handleEditClick = (item) => {
-                setEditItem(item);
-                setView('add');
-            };
+            const handleEditClick = (item) => { setEditItem(item); setView('add'); };
 
             return (
-                <div className="max-w-md mx-auto min-h-screen bg-gray-50 relative shadow-2xl overflow-hidden flex flex-col">
+                <div className="max-w-md mx-auto min-h-screen bg-white shadow-2xl overflow-hidden flex flex-col relative">
+                    <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-blue-500 to-purple-600 rounded-b-[40px] z-0"></div>
+                    
                     {/* Header */}
-                    <div className="bg-white px-6 py-4 flex justify-between items-center sticky top-0 z-20 shadow-sm">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">
-                                <Icon name="wallet" className="w-5 h-5" />
+                    <div className="px-6 pt-6 pb-2 flex justify-between items-center z-10 text-white">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10 shadow-lg">
+                                <Icon name="grid" className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <h1 className="font-bold text-gray-800 text-lg leading-tight">ExpenseTracker</h1>
-                                {isAdmin && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">Admin Mode</span>}
+                                <h1 className="font-bold text-lg leading-tight">Expense 3D</h1>
+                                <p className="text-[10px] opacity-80">{isAdmin ? 'Admin Mode' : 'Standard User'}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div onClick={() => signOut(auth)} className="p-2 bg-gray-100 rounded-full cursor-pointer hover:bg-red-50 hover:text-red-500 transition-colors">
-                                <Icon name="log-out" className="w-4 h-4" />
-                            </div>
+                        <div onClick={() => setView('profile')} className="w-10 h-10 rounded-full border-2 border-white/30 cursor-pointer overflow-hidden shadow-lg hover:scale-105 transition-transform">
+                            <img src={userProfile?.photoURL || 'https://via.placeholder.com/150'} className="w-full h-full object-cover" />
                         </div>
                     </div>
 
-                    {/* Content */}
-                    <div className="flex-1 overflow-y-auto hide-scrollbar pb-24 p-4">
+                    {/* Content Area */}
+                    <div className="flex-1 overflow-y-auto hide-scrollbar z-10 px-5 pt-2 pb-24">
                         {view === 'home' && <HomeView expenses={expenses} onDelete={handleDelete} onEdit={handleEditClick} loading={loading} setView={setView} />}
                         {view === 'add' && <AddEditView user={user} setView={setView} editItem={editItem} setEditItem={setEditItem} />}
                         {view === 'reports' && <ReportsView expenses={expenses} />}
                         {view === 'admin' && isAdmin && <AdminPanel />}
+                        {view === 'profile' && <ProfileSettings user={user} userProfile={userProfile} />}
                     </div>
 
-                    {/* Bottom Nav */}
-                    <div className="absolute bottom-0 w-full bg-white border-t border-gray-100 px-6 py-2 flex justify-between items-end pb-safe z-30">
-                        <NavBtn active={view==='home'} icon="home" label="ទំព័រដើម" onClick={()=>{setView('home'); setEditItem(null);}} />
-                        
-                        <button onClick={()=>{setEditItem(null); setView('add');}} className="bg-emerald-600 text-white p-4 rounded-full shadow-lg shadow-emerald-200 transform -translate-y-6 hover:scale-105 transition-all border-4 border-gray-50">
+                    {/* 3D Floating Bottom Nav */}
+                    <div className="absolute bottom-6 left-5 right-5 h-16 glass-panel rounded-2xl flex justify-between items-center px-6 shadow-3d z-30">
+                        <NavBtn active={view==='home'} icon="home" onClick={()=>{setView('home'); setEditItem(null);}} />
+                        <button onClick={()=>{setEditItem(null); setView('add');}} className="w-14 h-14 bg-gradient-to-tr from-blue-500 to-cyan-400 rounded-full shadow-lg shadow-blue-500/40 text-white flex items-center justify-center -translate-y-6 border-4 border-[#f0f2f5] hover:scale-110 transition-transform">
                             <Icon name="plus" className="w-7 h-7" />
                         </button>
-                        
-                        {isAdmin ? (
-                            <NavBtn active={view==='admin'} icon="shield" label="Admin" onClick={()=>{setView('admin'); setEditItem(null);}} />
-                        ) : (
-                            <NavBtn active={view==='reports'} icon="pie-chart" label="របាយការណ៍" onClick={()=>{setView('reports'); setEditItem(null);}} />
-                        )}
+                        {isAdmin ? <NavBtn active={view==='admin'} icon="shield" onClick={()=>{setView('admin'); setEditItem(null);}} /> : <NavBtn active={view==='reports'} icon="pie-chart" onClick={()=>{setView('reports'); setEditItem(null);}} />}
                     </div>
                 </div>
             );
         };
 
-        // --- Admin Panel Component ---
-        const AdminPanel = () => {
-            const [users, setUsers] = useState([]);
-            const [loading, setLoading] = useState(true);
+        // --- Improved Profile Settings ---
+        const ProfileSettings = ({ user, userProfile }) => {
+            const [loading, setLoading] = useState(false);
+            const [showLogout, setShowLogout] = useState(false);
+            const fileRef = useRef(null);
 
-            useEffect(() => {
-                const usersRef = ref(db, `artifacts/${appId}/users`);
-                const unsub = onValue(usersRef, (snapshot) => {
-                    const val = snapshot.val();
-                    if (val) {
-                        const list = Object.values(val).map(u => u.profile).filter(p => p); // Get profiles
-                        setUsers(list);
-                    } else {
-                        setUsers([]);
-                    }
-                    setLoading(false);
-                });
-                return () => unsub();
-            }, []);
+            const handleUpload = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                setLoading(true);
+                try {
+                    const url = await uploadToCloudinary(file);
+                    await updateProfile(user, { photoURL: url });
+                    await update(ref(db, `artifacts/${appId}/users/${user.uid}/profile`), { photoURL: url });
+                    alert("បានប្តូររូបភាពជោគជ័យ!");
+                } catch (err) { alert("បរាជ័យ៖ " + err.message); } finally { setLoading(false); }
+            };
 
-            const toggleStatus = async (targetUser) => {
-                const newStatus = targetUser.status === 'frozen' ? 'active' : 'frozen';
-                const confirmMsg = newStatus === 'frozen' 
-                    ? `តើអ្នកចង់បង្កកគណនី ${targetUser.email} មែនទេ?` 
-                    : `ដោះលែងគណនី ${targetUser.email} វិញ?`;
-                
-                if(confirm(confirmMsg)) {
-                    await update(ref(db, `artifacts/${appId}/users/${targetUser.uid}/profile`), {
-                        status: newStatus
-                    });
-                }
+            const confirmLogout = () => {
+                signOut(auth);
             };
 
             return (
-                <div className="space-y-6 animate-fade-in pb-20">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4">គ្រប់គ្រងអ្នកប្រើប្រាស់ (Admin)</h2>
-                    {loading ? <p className="text-center text-gray-400">កំពុងផ្ទុក...</p> : (
-                        <div className="space-y-3">
-                            {users.map((u, idx) => (
-                                <div key={idx} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <h4 className="font-bold text-gray-800 text-sm">{u.displayName}</h4>
-                                            <p className="text-xs text-gray-500">{u.email}</p>
-                                            <span className={`text-[10px] px-2 py-0.5 rounded-full mt-1 inline-block font-medium ${u.status === 'frozen' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
-                                                {u.status === 'frozen' ? 'Frozen' : 'Active'}
-                                            </span>
-                                            {u.role === 'admin' && <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full ml-1 font-bold">Admin</span>}
-                                        </div>
-                                        {u.role !== 'admin' && (
-                                            <button 
-                                                onClick={() => toggleStatus(u)}
-                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-colors ${u.status === 'frozen' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}`}
-                                            >
-                                                {u.status === 'frozen' ? 'បើកវិញ' : 'បង្កក'}
-                                            </button>
-                                        )}
-                                    </div>
-                                    <div className="text-[10px] text-gray-400 border-t pt-2">
-                                        ID: {u.uid}
-                                    </div>
+                <div className="animate-pop pb-20 px-4 pt-16">
+                    {/* Logout Modal */}
+                    {showLogout && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowLogout(false)}></div>
+                            <div className="bg-white rounded-3xl p-6 w-full max-w-xs relative z-10 shadow-2xl animate-pop text-center">
+                                <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+                                    <Icon name="log-out" className="w-8 h-8" />
                                 </div>
-                            ))}
+                                <h3 className="text-xl font-bold text-slate-800 mb-2">ចាកចេញ?</h3>
+                                <p className="text-slate-500 text-sm mb-6">តើអ្នកពិតជាចង់ចាកចេញពីគណនីនេះមែនទេ?</p>
+                                <div className="flex gap-3">
+                                    <button onClick={() => setShowLogout(false)} className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors">ថយក្រោយ</button>
+                                    <button onClick={confirmLogout} className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30">ចាកចេញ</button>
+                                </div>
+                            </div>
                         </div>
                     )}
+
+                    <div className="bg-white rounded-[2.5rem] shadow-xl p-6 relative mt-12 text-center border border-slate-50">
+                        {/* Avatar */}
+                        <div className="absolute -top-16 left-1/2 -translate-x-1/2">
+                            <div className="relative group cursor-pointer" onClick={() => !loading && fileRef.current.click()}>
+                                <div className="w-32 h-32 rounded-full border-[6px] border-white shadow-2xl overflow-hidden bg-white relative">
+                                    {loading ? (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-slate-100"><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>
+                                    ) : (
+                                        <img src={userProfile?.photoURL || 'https://via.placeholder.com/150'} className="w-full h-full object-cover" />
+                                    )}
+                                </div>
+                                <div className="absolute bottom-2 right-2 bg-blue-500 p-2.5 rounded-full text-white border-4 border-white shadow-md hover:scale-110 transition-transform">
+                                    <Icon name="camera" className="w-4 h-4" />
+                                </div>
+                            </div>
+                            <input type="file" ref={fileRef} onChange={handleUpload} accept="image/*" style={{display: 'none'}} />
+                        </div>
+                        
+                        <div className="mt-16">
+                            <h2 className="text-2xl font-bold text-slate-800 mb-1">{userProfile?.displayName || 'User'}</h2>
+                            <p className="text-slate-500 font-medium text-sm mb-6 bg-slate-50 px-3 py-1 rounded-full inline-block">{userProfile?.email}</p>
+                            
+                            <div className="flex justify-center gap-3 mb-8">
+                                <div className={`px-4 py-2 rounded-2xl text-sm font-bold flex items-center gap-2 border ${userProfile?.role === 'admin' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-600 border-slate-100'}`}>
+                                    <Icon name="shield" className="w-4 h-4" />
+                                    {userProfile?.role === 'admin' ? 'Admin' : 'User'}
+                                </div>
+                                <div className={`px-4 py-2 rounded-2xl text-sm font-bold flex items-center gap-2 border ${userProfile?.status === 'frozen' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                                    <Icon name="activity" className="w-4 h-4" />
+                                    {userProfile?.status === 'frozen' ? 'Frozen' : 'Active'}
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <button className="w-full py-4 rounded-2xl bg-slate-50 text-slate-700 font-bold flex items-center justify-between px-6 hover:bg-slate-100 transition-all group">
+                                    <span className="flex items-center gap-3"><Icon name="settings" className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors"/> ការកំណត់</span>
+                                    <Icon name="chevron-right" className="w-4 h-4 text-slate-300" />
+                                </button>
+                                <button onClick={() => setShowLogout(true)} className="w-full py-4 rounded-2xl bg-red-50 text-red-500 font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition-all active:scale-95 border border-red-100">
+                                    <Icon name="log-out" className="w-5 h-5" />
+                                    ចាកចេញពីគណនី
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             );
         };
 
-        const NavBtn = ({ active, icon, label, onClick }) => (
-            <button onClick={onClick} className={`flex flex-col items-center gap-1 w-16 py-2 transition-colors ${active ? 'text-emerald-600' : 'text-gray-400 hover:text-gray-600'}`}>
-                <Icon name={icon} className={`w-6 h-6 ${active ? 'fill-emerald-100' : ''}`} />
-                <span className="text-[10px] font-medium">{label}</span>
-            </button>
-        );
-
-        // --- Sub-Views --- (HomeView, AddEditView, ReportsView are same as before)
+        // --- Other Views ---
         const HomeView = ({ expenses, onDelete, onEdit, loading, setView }) => {
-            const totalUSD = useMemo(() => {
-                return expenses.reduce((acc, curr) => {
-                    const amt = parseFloat(curr.amount) || 0;
-                    return acc + (curr.currency === 'USD' ? amt : amt / EXCHANGE_RATE);
-                }, 0);
-            }, [expenses]);
-            
+            const totalUSD = useMemo(() => expenses.reduce((acc, c) => acc + (parseFloat(c.amount)||0) / (c.currency==='USD'?1:EXCHANGE_RATE), 0), [expenses]);
             const totalKHR = totalUSD * EXCHANGE_RATE;
 
             return (
-                <div className="space-y-6 animate-fade-in">
-                    {/* Balance Card */}
-                    <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-3xl p-6 text-white shadow-xl shadow-emerald-200 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-10 translate-x-10"></div>
-                        <p className="text-emerald-100 text-xs font-medium mb-1">ចំណាយសរុបខែនេះ</p>
-                        <h2 className="text-3xl font-bold mb-1">{formatMoney(totalKHR, 'KHR')}</h2>
-                        <p className="text-emerald-100 text-sm opacity-80">≈ {formatMoney(totalUSD, 'USD')}</p>
+                <div className="space-y-6 animate-pop">
+                    <div className="w-full h-48 rounded-[30px] p-6 relative overflow-hidden shadow-3d-hover transition-transform hover:scale-[1.02] duration-300">
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/10 backdrop-blur-xl border border-white/30 z-0"></div>
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
+                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
                         
-                        <div className="mt-4 flex gap-2">
-                            <div className="bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-lg text-xs flex items-center gap-2">
-                                <Icon name="calendar" className="w-3 h-3" />
-                                <span>{new Date().toLocaleDateString('km-KH', { month: 'long', year: 'numeric' })}</span>
+                        <div className="relative z-10 flex flex-col justify-between h-full text-white">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-xs font-medium text-white/80 uppercase tracking-wider">សាច់ប្រាក់សរុប</p>
+                                    <h2 className="text-3xl font-bold mt-1 drop-shadow-sm">{formatMoney(totalKHR, 'KHR')}</h2>
+                                </div>
+                                <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm"><Icon name="credit-card" className="w-6 h-6"/></div>
+                            </div>
+                            <div className="flex justify-between items-end">
+                                <div className="bg-black/10 px-3 py-1 rounded-lg backdrop-blur-sm border border-white/10">
+                                    <span className="text-sm font-medium">≈ {formatMoney(totalUSD, 'USD')}</span>
+                                </div>
+                                <p className="text-[10px] text-white/70">{new Date().toLocaleDateString('km-KH')}</p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Recent List */}
                     <div>
-                        <div className="flex justify-between items-center mb-4">
+                        <div className="flex justify-between items-end mb-4 px-2">
                             <h3 className="text-lg font-bold text-gray-800">ប្រតិបត្តិការថ្មីៗ</h3>
-                            <button onClick={()=>setView('reports')} className="text-emerald-600 text-xs font-bold hover:underline">មើលទាំងអស់</button>
+                            <button onClick={()=>setView('reports')} className="text-blue-500 text-xs font-bold hover:underline">មើលទាំងអស់</button>
                         </div>
-
-                        {loading ? (
-                            <div className="text-center py-10 text-gray-400 text-sm">កំពុងដំណើរការ...</div>
-                        ) : expenses.length === 0 ? (
-                            <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50">
-                                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-400">
-                                    <Icon name="clipboard-list" className="w-6 h-6" />
-                                </div>
-                                <p className="text-gray-500 font-medium">មិនទាន់មានទិន្នន័យ</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {expenses.slice(0, 10).map(item => {
-                                    const cat = CATEGORIES.find(c => c.id === item.category) || CATEGORIES[6];
-                                    const displayCatName = item.category === 'other' && item.customCategory ? item.customCategory : cat.name;
-
-                                    return (
-                                        <div onClick={() => onEdit(item)} key={item.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center active:bg-gray-50 cursor-pointer transition-colors">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${cat.color}`}>
-                                                    <Icon name={cat.icon} className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold text-gray-800 text-sm">{item.title}</h4>
-                                                    <p className="text-[10px] text-gray-500 flex items-center gap-1">
-                                                        <span>{displayCatName}</span> • <span>{new Date(item.date).toLocaleDateString('km-KH')}</span>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="font-bold text-gray-800 text-sm">{formatMoney(item.amount, item.currency)}</p>
-                                                <button onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} className="text-red-300 hover:text-red-500 p-1">
-                                                    <Icon name="trash-2" className="w-4 h-4" />
-                                                </button>
-                                            </div>
+                        {loading ? <div className="space-y-3">{[1,2].map(i=><div key={i} className="h-20 bg-white rounded-2xl animate-pulse"></div>)}</div> : expenses.length===0 ? <div className="text-center py-10 bg-white/50 rounded-3xl"><p className="text-gray-400 text-sm">គ្មានទិន្នន័យ</p></div> : 
+                        <div className="space-y-3">
+                            {expenses.slice(0,10).map((item, idx)=>(
+                                <div onClick={()=>onEdit(item)} key={item.id} className="bg-white p-4 rounded-2xl shadow-soft flex justify-between items-center cursor-pointer transition-all hover:translate-y-[-2px] hover:shadow-lg animate-pop" style={{animationDelay: `${idx*0.05}s`}}>
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${CATEGORIES.find(c=>c.id===item.category)?.bg} ${CATEGORIES.find(c=>c.id===item.category)?.color}`}>
+                                            <Icon name={CATEGORIES.find(c=>c.id===item.category)?.icon||'circle'} className="w-6 h-6" />
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        )}
+                                        <div>
+                                            <h4 className="font-bold text-gray-800 text-sm mb-0.5">{item.title}</h4>
+                                            <p className="text-[10px] text-gray-400">{new Date(item.date).toLocaleDateString('km-KH')}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-bold text-gray-800">{formatMoney(item.amount, item.currency)}</p>
+                                        <button onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} className="text-gray-300 hover:text-red-500 p-2 -mr-2"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>}
                     </div>
                 </div>
             );
         };
 
         const AddEditView = ({ user, setView, editItem, setEditItem }) => {
-            const [title, setTitle] = useState(editItem ? editItem.title : '');
-            const [amount, setAmount] = useState(editItem ? editItem.amount : '');
-            const [currency, setCurrency] = useState(editItem ? editItem.currency : 'KHR');
-            const [category, setCategory] = useState(editItem ? editItem.category : 'food');
-            const [customCategory, setCustomCategory] = useState(editItem ? editItem.customCategory : '');
-            const [date, setDate] = useState(editItem ? editItem.date : new Date().toISOString().substr(0, 10));
-            const [isSaving, setIsSaving] = useState(false);
-
-            const handleSave = async (e) => {
-                e.preventDefault();
-                if (!title || !amount) return;
-                setIsSaving(true);
+            const [form, setForm] = useState(editItem || { title: '', amount: '', currency: 'KHR', category: 'food', date: new Date().toISOString().split('T')[0] });
+            const [saving, setSaving] = useState(false);
+            const save = async (e) => {
+                e.preventDefault(); if(!form.title || !form.amount) return;
+                setSaving(true);
                 try {
-                    const payload = {
-                        title, 
-                        amount: parseFloat(amount), 
-                        currency, 
-                        category,
-                        customCategory: category === 'other' ? customCategory : null,
-                        date, 
-                        updatedAt: new Date().toISOString()
-                    };
-
-                    if (editItem) {
-                        const itemRef = ref(db, `artifacts/${appId}/users/${user.uid}/expenses/${editItem.id}`);
-                        await update(itemRef, payload);
-                    } else {
-                        payload.createdAt = new Date().toISOString();
-                        const listRef = push(ref(db, `artifacts/${appId}/users/${user.uid}/expenses`));
-                        await set(listRef, payload);
-                    }
-                    setEditItem(null);
-                    setView('home');
-                } catch (err) {
-                    alert("បញ្ហា Database: " + err.message);
-                } finally {
-                    setIsSaving(false);
-                }
+                    const payload = { ...form, amount: parseFloat(form.amount), updatedAt: new Date().toISOString() };
+                    if(editItem) await update(ref(db, `artifacts/${appId}/users/${user.uid}/expenses/${editItem.id}`), payload);
+                    else { payload.createdAt = new Date().toISOString(); await set(push(ref(db, `artifacts/${appId}/users/${user.uid}/expenses`)), payload); }
+                    setEditItem(null); setView('home');
+                } catch(err) { alert(err.message); } finally { setSaving(false); }
             };
-
             return (
-                <div className="animate-slide-up pb-20">
-                    <div className="flex items-center gap-3 mb-6">
-                        <button onClick={() => { setEditItem(null); setView('home'); }} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                            <Icon name="arrow-left" className="w-5 h-5" />
-                        </button>
-                        <h2 className="text-xl font-bold text-gray-800">{editItem ? 'កែប្រែចំណាយ' : 'បន្ថែមចំណាយថ្មី'}</h2>
+                <div className="animate-pop bg-white rounded-[40px] shadow-3d p-6 mt-10">
+                    <div className="flex items-center gap-4 mb-6">
+                        <button onClick={()=>{setEditItem(null); setView('home');}} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200"><Icon name="arrow-left" className="w-5 h-5"/></button>
+                        <h2 className="text-xl font-bold text-gray-800">{editItem?'កែប្រែ':'បន្ថែមថ្មី'}</h2>
                     </div>
-
-                    <form onSubmit={handleSave} className="space-y-5 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">ឈ្មោះចំណាយ</label>
-                            <input required value={title} onChange={(e) => setTitle(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none custom-input font-medium" placeholder="ឧ. កាហ្វេ, អាហារថ្ងៃត្រង់" />
+                    <form onSubmit={save} className="space-y-5">
+                        <div className="glass-input p-1 rounded-2xl flex items-center">
+                            <div className="p-3 text-gray-400"><Icon name="type" className="w-5 h-5"/></div>
+                            <input required value={form.title} onChange={e=>setForm({...form, title: e.target.value})} className="bg-transparent w-full outline-none text-gray-700 font-medium" placeholder="ឈ្មោះចំណាយ (ឧ. កាហ្វេ)" />
                         </div>
-
-                        <div className="grid grid-cols-5 gap-3">
-                            <div className="col-span-3">
-                                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">តម្លៃ</label>
-                                <input required type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none custom-input font-bold text-lg" placeholder="0.00" />
+                        <div className="flex gap-3">
+                            <div className="glass-input p-1 rounded-2xl flex items-center flex-1">
+                                <div className="p-3 text-gray-400"><Icon name="dollar-sign" className="w-5 h-5"/></div>
+                                <input required type="number" step="0.01" value={form.amount} onChange={e=>setForm({...form, amount: e.target.value})} className="bg-transparent w-full outline-none text-gray-700 font-bold text-lg" placeholder="0.00" />
                             </div>
-                            <div className="col-span-2">
-                                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">រូបិយប័ណ្ណ</label>
-                                <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-200 h-[50px]">
-                                    <button type="button" onClick={() => setCurrency('KHR')} className={`flex-1 rounded-lg text-xs font-bold transition-all ${currency === 'KHR' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400'}`}>៛</button>
-                                    <button type="button" onClick={() => setCurrency('USD')} className={`flex-1 rounded-lg text-xs font-bold transition-all ${currency === 'USD' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400'}`}>$</button>
-                                </div>
+                            <div className="glass-input p-1 rounded-2xl flex items-center w-28">
+                                <select value={form.currency} onChange={e=>setForm({...form, currency: e.target.value})} className="bg-transparent w-full outline-none text-gray-700 font-bold text-center appearance-none">
+                                    <option value="KHR">៛ KHR</option>
+                                    <option value="USD">$ USD</option>
+                                </select>
                             </div>
                         </div>
-
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">ប្រភេទ</label>
-                            <div className="grid grid-cols-4 gap-2">
-                                {CATEGORIES.map(cat => (
-                                    <button key={cat.id} type="button" onClick={() => setCategory(cat.id)} className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all aspect-square ${category === cat.id ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-100 hover:bg-gray-50 text-gray-500'}`}>
-                                        <Icon name={cat.icon} className="w-5 h-5 mb-1" />
-                                        <span className="text-[9px] text-center leading-tight">{cat.name.split(' ')[0]}</span>
+                            <label className="text-xs font-bold text-gray-400 ml-2 mb-2 block uppercase">ប្រភេទ</label>
+                            <div className="grid grid-cols-4 gap-3">
+                                {CATEGORIES.map(c=>(
+                                    <button key={c.id} type="button" onClick={()=>setForm({...form, category: c.id})} className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all ${form.category===c.id ? 'bg-blue-500 text-white shadow-lg scale-105' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}>
+                                        <Icon name={c.icon} className="w-6 h-6 mb-1"/>
                                     </button>
                                 ))}
                             </div>
-                            {category === 'other' && (
-                                <div className="mt-3 animate-fade-in">
-                                    <input value={customCategory} onChange={(e) => setCustomCategory(e.target.value)} className="w-full px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-xl focus:outline-none text-sm text-emerald-800 placeholder-emerald-300" placeholder="សរសេរឈ្មោះប្រភេទនៅទីនេះ..." autoFocus />
-                                </div>
-                            )}
                         </div>
-
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">កាលបរិច្ឆេទ</label>
-                            <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none custom-input" />
+                        <div className="glass-input p-1 rounded-2xl flex items-center">
+                            <div className="p-3 text-gray-400"><Icon name="calendar" className="w-5 h-5"/></div>
+                            <input type="date" required value={form.date} onChange={e=>setForm({...form, date: e.target.value})} className="bg-transparent w-full outline-none text-gray-700 font-medium" />
                         </div>
-
-                        <button type="submit" disabled={isSaving} className="w-full py-4 bg-emerald-600 text-white font-bold rounded-xl shadow-lg hover:bg-emerald-700 transition-all active:scale-95 mt-4">
-                            {isSaving ? 'កំពុងរក្សាទុក...' : (editItem ? 'កែប្រែទិន្នន័យ' : 'រក្សាទុក')}
+                        <button type="submit" disabled={saving} className="w-full py-4 btn-3d text-white font-bold rounded-2xl mt-4 flex justify-center items-center gap-2">
+                            {saving ? 'កំពុងដំណើរការ...' : <><Icon name="save" className="w-5 h-5"/> រក្សាទុក</>}
                         </button>
                     </form>
                 </div>
@@ -668,97 +647,90 @@
 
         const ReportsView = ({ expenses }) => {
             const analysis = useMemo(() => {
-                const now = new Date();
-                const currentMonthIdx = now.getMonth();
-                const lastMonthIdx = currentMonthIdx === 0 ? 11 : currentMonthIdx - 1;
-                
-                let currentMonthTotal = 0;
-                let lastMonthTotal = 0;
-                const byCategory = {};
-
-                expenses.forEach(e => {
-                    const d = new Date(e.date);
-                    const amt = parseFloat(e.amount);
-                    const val = e.currency === 'USD' ? amt * EXCHANGE_RATE : amt;
-
-                    if (d.getMonth() === currentMonthIdx && d.getFullYear() === now.getFullYear()) {
-                        currentMonthTotal += val;
-                        const catKey = e.category === 'other' && e.customCategory ? 'ផ្សេងៗ' : (CATEGORIES.find(c=>c.id===e.category)?.name || e.category);
-                        byCategory[catKey] = (byCategory[catKey] || 0) + val;
-                    } 
-                    else if (d.getMonth() === lastMonthIdx && d.getFullYear() === (currentMonthIdx === 0 ? now.getFullYear() - 1 : now.getFullYear())) {
-                        lastMonthTotal += val;
-                    }
-                });
-
-                let percentChange = 0;
-                let status = 'same'; 
-                if (lastMonthTotal > 0) {
-                    percentChange = ((currentMonthTotal - lastMonthTotal) / lastMonthTotal) * 100;
-                } else if (currentMonthTotal > 0) {
-                    percentChange = 100;
-                }
-
-                if (percentChange > 0) status = 'increase';
-                if (percentChange < 0) status = 'decrease';
-
-                const catData = Object.entries(byCategory)
-                    .map(([name, val]) => ({ name, val, percent: (val/currentMonthTotal)*100 }))
-                    .sort((a,b) => b.val - a.val);
-
-                return { currentMonthTotal, lastMonthTotal, percentChange: Math.abs(percentChange).toFixed(1), status, catData };
+                let total = 0; const cats = {};
+                expenses.forEach(e => { const v = parseFloat(e.amount)/(e.currency==='USD'?1:EXCHANGE_RATE); total += v; const k = e.category; cats[k] = (cats[k]||0)+v; });
+                return { total, cats: Object.entries(cats).map(([k,v])=>({name: CATEGORIES.find(c=>c.id===k)?.name||k, val: v, pct: (v/total)*100})).sort((a,b)=>b.val-a.val) };
             }, [expenses]);
-
             return (
-                <div className="space-y-6 animate-fade-in pb-20">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4">របាយការណ៍ហិរញ្ញវត្ថុ</h2>
-
-                    {/* Comparison Card */}
-                    <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
-                        <h3 className="text-sm font-bold text-gray-500 uppercase mb-4">ប្រៀបធៀប (ខែនេះ vs ខែមុន)</h3>
-                        <div className="flex items-end justify-between">
-                            <div>
-                                <p className="text-3xl font-bold text-gray-800">{formatMoney(analysis.currentMonthTotal, 'KHR')}</p>
-                                <p className="text-xs text-gray-400 mt-1">ខែមុន: {formatMoney(analysis.lastMonthTotal, 'KHR')}</p>
-                            </div>
-                            <div className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1 ${analysis.status === 'increase' ? 'bg-red-100 text-red-600' : analysis.status === 'decrease' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'}`}>
-                                <Icon name={analysis.status === 'increase' ? 'trending-up' : analysis.status === 'decrease' ? 'trending-down' : 'minus'} className="w-4 h-4" />
-                                <span>{analysis.percentChange}%</span>
-                            </div>
-                        </div>
-                        <p className={`text-xs mt-3 ${analysis.status === 'increase' ? 'text-red-500' : 'text-green-600'}`}>
-                            {analysis.status === 'increase' ? 'ចំណាយច្រើនជាងខែមុន' : analysis.status === 'decrease' ? 'សន្សំបានល្អជាងខែមុន' : 'ចំណាយប្រហាក់ប្រហែលខែមុន'}
-                        </p>
+                <div className="animate-pop bg-white rounded-[40px] shadow-3d p-6 mt-10 min-h-[500px]">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6">របាយការណ៍</h2>
+                    <div className="bg-blue-50 rounded-3xl p-6 text-center mb-8 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-blue-200 rounded-full blur-xl opacity-50 -mr-6 -mt-6"></div>
+                        <p className="text-blue-500 font-bold text-xs uppercase tracking-wider">សរុបចំណាយ</p>
+                        <h2 className="text-3xl font-extrabold text-blue-600 mt-2">{formatMoney(analysis.total * EXCHANGE_RATE, 'KHR')}</h2>
                     </div>
-
-                    {/* Breakdown */}
-                    <div>
-                        <h3 className="text-lg font-bold text-gray-800 mb-4">ការវិភាគតាមប្រភេទ</h3>
-                        <div className="space-y-4">
-                            {analysis.catData.length === 0 ? (
-                                <p className="text-center text-gray-400 py-8 text-sm">មិនទាន់មានទិន្នន័យសម្រាប់ខែនេះ</p>
-                            ) : analysis.catData.map((cat, idx) => (
-                                <div key={idx} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-50">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                            <span className="font-bold text-gray-700 text-sm">{cat.name}</span>
-                                        </div>
-                                        <span className="font-bold text-gray-900 text-sm">{cat.percent.toFixed(1)}%</span>
+                    <div className="space-y-4">
+                        {analysis.cats.map((c, i)=>(
+                            <div key={i} className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-blue-500 font-bold shadow-inner">{c.pct.toFixed(0)}%</div>
+                                <div className="flex-1">
+                                    <div className="flex justify-between mb-1">
+                                        <span className="font-bold text-gray-700">{c.name}</span>
+                                        <span className="text-gray-500 text-sm">{formatMoney(c.val * EXCHANGE_RATE, 'KHR')}</span>
                                     </div>
-                                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${cat.percent}%` }}></div>
+                                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                        <div className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full" style={{width: `${c.pct}%`}}></div>
                                     </div>
-                                    <p className="text-xs text-right mt-1 text-gray-400">{formatMoney(cat.val, 'KHR')}</p>
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             );
         };
 
-        // Render
+        const NavBtn = ({ active, icon, onClick }) => (
+            <button onClick={onClick} className={`p-2 transition-all duration-300 ${active ? 'text-blue-600 scale-125' : 'text-gray-400 hover:text-gray-600'}`}>
+                <Icon name={icon} className="w-7 h-7" />
+            </button>
+        );
+
+        const FrozenScreen = () => (
+            <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-red-50 text-center animate-pop">
+                <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mb-6 text-red-500 shadow-lg shadow-red-200"><Icon name="lock" className="w-12 h-12" /></div>
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">គណនីត្រូវបានបង្កក!</h2>
+                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-8 mt-6">
+                    <p className="text-xs text-blue-500 font-bold mb-2">ទំនាក់ទំនងជំនួយ</p>
+                    <a href="https://t.me/MMKDaro" target="_blank" className="flex items-center justify-center gap-2 text-blue-700 font-bold hover:underline"><Icon name="send" className="w-4 h-4" /> t.me/MMKDaro</a>
+                </div>
+                <button onClick={() => signOut(auth)} className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl">ចាកចេញ</button>
+            </div>
+        );
+
+        const AdminPanel = () => {
+            const [users, setUsers] = useState([]);
+            const [loading, setLoading] = useState(true);
+            useEffect(() => {
+                const unsub = onValue(ref(db, `artifacts/${appId}/users`), (snap) => {
+                    setUsers(snap.val() ? Object.values(snap.val()).map(u => u.profile).filter(Boolean) : []);
+                    setLoading(false);
+                });
+                return () => unsub();
+            }, []);
+            const toggleStatus = async (u) => {
+                if(confirm("ប្តូរស្ថានភាព?")) await update(ref(db, `artifacts/${appId}/users/${u.uid}/profile`), { status: u.status === 'frozen' ? 'active' : 'frozen' });
+            };
+            return (
+                <div className="animate-pop pt-20 px-4 pb-24">
+                    <h2 className="text-2xl font-bold text-white mb-6 drop-shadow-md">Admin Panel</h2>
+                    <div className="space-y-3">
+                        {users.map((u, idx) => (
+                            <div key={idx} className="bg-white p-4 rounded-2xl shadow-lg flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-3 h-3 rounded-full ${u.status === 'frozen' ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                                    <div>
+                                        <h4 className="font-bold text-gray-800 text-sm">{u.displayName}</h4>
+                                        <p className="text-xs text-gray-400">{u.email}</p>
+                                    </div>
+                                </div>
+                                {u.role !== 'admin' && <button onClick={() => toggleStatus(u)} className="p-2 bg-gray-100 rounded-lg"><Icon name={u.status === 'frozen' ? 'unlock' : 'lock'} className="w-4 h-4 text-gray-600" /></button>}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
