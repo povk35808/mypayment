@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Expense Tracker 3D</title>
+    <title>Expense 3D Pro</title>
     
     <!-- Google Fonts: Kantumruy Pro -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,24 +23,20 @@
                         glass: 'rgba(255, 255, 255, 0.7)',
                         glassBorder: 'rgba(255, 255, 255, 0.5)',
                         primary: {
-                            50: '#ecfdf5',
-                            100: '#d1fae5',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
+                            500: '#00D2FF',
+                            600: '#3A7BD5',
                         }
                     },
                     boxShadow: {
                         '3d': '0 10px 40px -10px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.5) inset',
                         '3d-hover': '0 20px 50px -10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.6) inset',
-                        'soft': '0 10px 40px -10px rgba(0, 0, 0, 0.08)',
-                        'glow': '0 0 20px rgba(16, 185, 129, 0.2)',
+                        'inner-light': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.3)',
                     },
                     animation: {
                         'float': 'float 6s ease-in-out infinite',
                         'blob': 'blob 7s infinite',
                         'pop': 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-                        'scaleIn': 'scaleIn 0.2s ease-out forwards',
+                        'slideUp': 'slideUp 0.5s ease-out forwards',
                     },
                     keyframes: {
                         float: {
@@ -57,9 +53,9 @@
                             '0%': { opacity: '0', transform: 'scale(0.9)' },
                             '100%': { opacity: '1', transform: 'scale(1)' },
                         },
-                        scaleIn: {
-                            '0%': { transform: 'scale(0.9)', opacity: '0' },
-                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
                         }
                     }
                 }
@@ -67,27 +63,27 @@
         }
     </script>
     
-    <!-- React & ReactDOM -->
+    <!-- Libraries -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
         body {
-            font-family: 'Kantumruy Pro', sans-serif;
-            background-color: #f0fdfa;
+            background-color: #e0e5ec;
+            /* Using the requested Blue/Purple gradient vibe */
+            background-image: linear-gradient(to top, #dfe9f3 0%, white 100%);
+            background-size: cover;
+            background-attachment: fixed;
+            color: #1f2937;
             -webkit-tap-highlight-color: transparent;
         }
         
         .glass-panel {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.6);
         }
 
@@ -112,19 +108,21 @@
             box-shadow: 0 2px 10px rgba(58, 123, 213, 0.3);
         }
 
-        .modern-input {
-            transition: all 0.3s ease;
-        }
-        .modern-input:focus {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.1);
-            border-color: #10b981;
-        }
-        
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        input[type="file"] { display: none; }
+        /* PDF hidden styles */
+        .pdf-content {
+            background: white;
+            padding: 40px;
+            display: none;
+        }
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-image: linear-gradient(to right, #3A7BD5, #00D2FF);
+        }
     </style>
 </head>
 <body>
@@ -135,30 +133,10 @@
         
         // --- Firebase Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            signOut, 
-            onAuthStateChanged,
-            sendEmailVerification,
-            updateProfile,
-            sendPasswordResetEmail,
-            setPersistence,
-            browserLocalPersistence
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { 
-            getDatabase,
-            ref,
-            set,
-            push,
-            onValue,
-            remove,
-            update,
-            get 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, updateProfile, sendPasswordResetEmail, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // --- Configuration ---
+        // --- Config ---
         const firebaseConfig = {
             apiKey: "AIzaSyDoow-Iiq7KNvWsJ91eWTNxV687yF8cCoI",
             authDomain: "mypayment-382f5.firebaseapp.com",
@@ -180,7 +158,7 @@
         const CLOUD_NAME = 'ds4z6hf7s';
         const UPLOAD_PRESET = 'mypayment';
 
-        // --- Helpers ---
+        // --- Utils ---
         const formatMoney = (amount, currency) => {
             const num = parseFloat(amount);
             if (isNaN(num)) return '0.00';
@@ -189,6 +167,29 @@
             } else {
                 return new Intl.NumberFormat('km-KH', { style: 'currency', currency: 'KHR' }).format(num);
             }
+        };
+
+        const generatePDF = (elementId, filename) => {
+            const element = document.getElementById(elementId);
+            const opt = {
+                margin: 10,
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            const clone = element.cloneNode(true);
+            clone.style.display = 'block';
+            clone.style.width = '700px';
+            const container = document.createElement('div');
+            container.style.position = 'absolute';
+            container.style.top = '-9999px';
+            container.appendChild(clone);
+            document.body.appendChild(container);
+            
+            html2pdf().set(opt).from(clone).save().then(() => {
+                document.body.removeChild(container);
+            });
         };
         
         const uploadToCloudinary = async (file) => {
@@ -201,7 +202,7 @@
                 const data = await res.json();
                 if(data.error) throw new Error(data.error.message);
                 return data.secure_url;
-            } catch (error) { console.error("Upload failed", error); throw error; }
+            } catch (error) { throw error; }
         };
 
         const CATEGORIES = [
@@ -234,21 +235,27 @@
             return <span style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: svgHtml }} />;
         };
 
-        // --- Custom Confirm Modal ---
+        const SupportButton = ({ className }) => (
+            <a href="https://t.me/povdaro_bot" target="_blank" className={`absolute z-50 p-3 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-blue-200 text-blue-500 hover:scale-110 transition-transform hover:bg-white hover:text-blue-600 group animate-float ${className}`}>
+                <div className="absolute inset-0 bg-blue-400 rounded-full opacity-0 group-hover:animate-ping"></div>
+                <Icon name="message-circle" className="w-6 h-6 relative z-10" />
+            </a>
+        );
+
         const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, type = 'danger' }) => {
             if (!isOpen) return null;
             return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-                    <div className="bg-white rounded-[2rem] p-6 w-full max-w-xs relative z-10 shadow-2xl animate-scaleIn border border-white/50">
-                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg ${type === 'danger' ? 'bg-red-50 text-red-500 shadow-red-100' : 'bg-blue-50 text-blue-500 shadow-blue-100'}`}>
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
+                    <div className="glass-panel rounded-[2rem] p-6 w-full max-w-xs relative z-10 shadow-3d animate-pop bg-white/95">
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg ${type === 'danger' ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
                             <Icon name={type === 'danger' ? 'alert-triangle' : 'info'} className="w-8 h-8" />
                         </div>
-                        <h3 className="text-xl font-bold text-slate-800 mb-2 text-center">{title}</h3>
-                        <p className="text-slate-500 text-sm mb-6 text-center leading-relaxed">{message}</p>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2 text-center">{title}</h3>
+                        <p className="text-gray-500 text-sm mb-6 text-center">{message}</p>
                         <div className="flex gap-3">
-                            <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors">បោះបង់</button>
-                            <button onClick={() => { onConfirm(); onClose(); }} className={`flex-1 py-3 rounded-xl text-white font-bold transition-colors shadow-lg active:scale-95 ${type === 'danger' ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' : 'bg-blue-500 hover:bg-blue-600 shadow-blue-500/30'}`}>
+                            <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-gray-100 text-gray-600 font-bold hover:bg-gray-200">បោះបង់</button>
+                            <button onClick={() => { onConfirm(); onClose(); }} className={`flex-1 py-3 rounded-xl text-white font-bold shadow-lg ${type === 'danger' ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'}`}>
                                 {type === 'danger' ? 'យល់ព្រម' : 'Yes'}
                             </button>
                         </div>
@@ -257,7 +264,6 @@
             );
         };
 
-        // --- App Component ---
         const App = () => {
             const [user, setUser] = useState(null);
             const [loading, setLoading] = useState(true);
@@ -281,14 +287,7 @@
                 }
             }, [user]);
 
-            if (loading) return (
-                <div className="flex items-center justify-center min-h-screen bg-slate-900">
-                    <div className="relative">
-                        <div className="w-20 h-20 rounded-full border-4 border-blue-500/30 animate-ping absolute"></div>
-                        <div className="w-20 h-20 rounded-full border-4 border-blue-500 border-t-transparent animate-spin relative z-10"></div>
-                    </div>
-                </div>
-            );
+            if (loading) return <div className="flex items-center justify-center min-h-screen bg-slate-900"><div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
             if (user && userProfile?.status === 'frozen') return <FrozenScreen />;
             return user ? <Dashboard user={user} userProfile={userProfile} /> : <AuthScreen />;
@@ -355,8 +354,10 @@
                     <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-blob animation-delay-2000"></div>
                     <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-blob animation-delay-4000"></div>
 
-                    <div className="glass-panel w-full max-w-sm rounded-3xl shadow-3d relative z-10 animate-pop overflow-hidden">
-                        <div className="p-8 text-center">
+                    <SupportButton className="top-4 right-4" />
+
+                    <div className="glass-panel w-full max-w-sm rounded-3xl shadow-3d relative z-10 animate-pop overflow-hidden bg-white/80">
+                        <div className="p-8 pb-6 text-center">
                             {isRegister ? (
                                 <div onClick={() => fileInputRef.current.click()} className="mx-auto w-24 h-24 relative cursor-pointer group mb-4">
                                     <div className="w-full h-full rounded-full bg-white/50 border-4 border-white shadow-lg overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105">
@@ -373,11 +374,11 @@
                             <h2 className="text-3xl font-bold text-gray-800 mb-1">{isRegister ? 'បង្កើតគណនី' : 'សូមស្វាគមន៍'}</h2>
                             <p className="text-gray-500 text-sm">{isRegister ? 'ចាប់ផ្តើមដំណើរហិរញ្ញវត្ថុរបស់អ្នក' : 'គ្រប់គ្រងចំណូលចំណាយរបស់អ្នក'}</p>
                         </div>
-
+                        
                         <div className="px-8 pb-8">
                             {error && <div className="mb-4 p-3 bg-red-100/80 border-l-4 border-red-500 text-red-700 text-xs rounded-r-lg font-medium flex items-center gap-2"><Icon name="alert-circle" className="w-4 h-4"/>{error}</div>}
                             {msg && <div className="mb-4 p-3 bg-green-100/80 border-l-4 border-green-500 text-green-700 text-xs rounded-r-lg font-medium flex items-center gap-2"><Icon name="check-circle" className="w-4 h-4"/>{msg}</div>}
-
+                            
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 {isRegister && (
                                     <div className="relative group">
@@ -423,15 +424,13 @@
             );
         };
 
-        // --- Dashboard (Modern Glass UI) ---
+        // --- Dashboard ---
         const Dashboard = ({ user, userProfile }) => {
             const [view, setView] = useState('home');
             const [expenses, setExpenses] = useState([]);
             const [loading, setLoading] = useState(true);
             const [editItem, setEditItem] = useState(null); 
-            // Modal State
             const [modal, setModal] = useState({ show: false, title: '', message: '', type: 'danger', action: null });
-            
             const isAdmin = userProfile?.role === 'admin';
 
             useEffect(() => {
@@ -467,6 +466,8 @@
                         type={modal.type} 
                     />
 
+                    <SupportButton className="bottom-24 right-5" />
+
                     <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-blue-500 to-purple-600 rounded-b-[40px] z-0"></div>
                     
                     {/* Header */}
@@ -485,7 +486,7 @@
                         </div>
                     </div>
 
-                    {/* Content Area */}
+                    {/* Content */}
                     <div className="flex-1 overflow-y-auto hide-scrollbar z-10 px-5 pt-2 pb-24">
                         {view === 'home' && <HomeView expenses={expenses} onDelete={handleDelete} onEdit={handleEditClick} loading={loading} setView={setView} />}
                         {view === 'add' && <AddEditView user={user} setView={setView} editItem={editItem} setEditItem={setEditItem} />}
@@ -506,117 +507,72 @@
             );
         };
 
-        // --- Improved Profile Settings ---
-        const ProfileSettings = ({ user, userProfile, triggerConfirm }) => {
-            const [loading, setLoading] = useState(false);
-            const fileRef = useRef(null);
-
-            const handleUpload = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                triggerConfirm('ប្តូររូបភាព?', 'តើអ្នកចង់ប្តូររូបភាព Profile មែនទេ?', async () => {
-                    setLoading(true);
-                    try {
-                        const url = await uploadToCloudinary(file);
-                        await updateProfile(user, { photoURL: url });
-                        await update(ref(db, `artifacts/${appId}/users/${user.uid}/profile`), { photoURL: url });
-                    } catch (err) { alert("បរាជ័យ៖ " + err.message); } finally { setLoading(false); }
-                }, 'info');
-            };
-
-            const confirmLogout = () => {
-                triggerConfirm('ចាកចេញ?', 'តើអ្នកពិតជាចង់ចាកចេញពីគណនីនេះមែនទេ?', () => signOut(auth));
-            };
-
-            return (
-                <div className="animate-pop pb-20 px-2 pt-16">
-                    <div className="bg-white rounded-[2.5rem] shadow-xl p-6 relative mt-12 text-center border border-slate-50">
-                        {/* Avatar */}
-                        <div className="absolute -top-16 left-1/2 -translate-x-1/2">
-                            <div className="relative group cursor-pointer" onClick={() => !loading && fileRef.current.click()}>
-                                <div className="w-32 h-32 rounded-full border-[6px] border-white shadow-2xl overflow-hidden bg-white relative">
-                                    {loading ? (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-slate-100"><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>
-                                    ) : (
-                                        <img src={userProfile?.photoURL || 'https://via.placeholder.com/150'} className="w-full h-full object-cover" />
-                                    )}
-                                </div>
-                                <div className="absolute bottom-2 right-2 bg-blue-500 p-2.5 rounded-full text-white border-4 border-white shadow-md hover:scale-110 transition-transform">
-                                    <Icon name="camera" className="w-4 h-4" />
-                                </div>
-                            </div>
-                            <input type="file" ref={fileRef} onChange={handleUpload} accept="image/*" style={{display: 'none'}} />
-                        </div>
-                        
-                        <div className="mt-16">
-                            <h2 className="text-2xl font-bold text-slate-800 mb-1">{userProfile?.displayName || 'User'}</h2>
-                            <p className="text-slate-500 font-medium text-sm mb-6 bg-slate-50 px-3 py-1 rounded-full inline-block">{userProfile?.email}</p>
-                            
-                            <div className="grid grid-cols-2 gap-3 mb-8">
-                                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center">
-                                    <span className="text-xs text-slate-400 font-bold uppercase mb-1">តួនាទី</span>
-                                    <div className={`flex items-center gap-1.5 font-bold ${userProfile?.role === 'admin' ? 'text-indigo-600' : 'text-slate-700'}`}>
-                                        <Icon name="shield" className="w-4 h-4" />
-                                        {userProfile?.role === 'admin' ? 'Admin' : 'User'}
-                                    </div>
-                                </div>
-                                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center">
-                                    <span className="text-xs text-slate-400 font-bold uppercase mb-1">ស្ថានភាព</span>
-                                    <div className={`flex items-center gap-1.5 font-bold ${userProfile?.status === 'frozen' ? 'text-red-500' : 'text-emerald-600'}`}>
-                                        <Icon name="activity" className="w-4 h-4" />
-                                        {userProfile?.status === 'frozen' ? 'Frozen' : 'Active'}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button onClick={confirmLogout} className="w-full py-4 rounded-2xl bg-red-50 text-red-500 font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition-all active:scale-95 border border-red-100 shadow-sm">
-                                <Icon name="log-out" className="w-5 h-5" />
-                                ចាកចេញពីគណនី
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        // --- Other Views ---
         const HomeView = ({ expenses, onDelete, onEdit, loading, setView }) => {
-            const totalUSD = useMemo(() => expenses.reduce((acc, c) => acc + (parseFloat(c.amount)||0) / (c.currency==='USD'?1:EXCHANGE_RATE), 0), [expenses]);
-            const totalKHR = totalUSD * EXCHANGE_RATE;
+            const { currentMonthExpenses, totalKHR, totalUSD, grandTotal } = useMemo(() => {
+                const now = new Date();
+                const filtered = expenses.filter(e => {
+                    const d = new Date(e.date);
+                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                });
+
+                let sumKHR = 0;
+                let sumUSD = 0;
+
+                filtered.forEach(e => {
+                    const amt = parseFloat(e.amount) || 0;
+                    if (e.currency === 'USD') sumUSD += amt;
+                    else sumKHR += amt;
+                });
+
+                const grandTotal = sumKHR + (sumUSD * EXCHANGE_RATE);
+
+                return { currentMonthExpenses: filtered, totalKHR: sumKHR, totalUSD: sumUSD, grandTotal };
+            }, [expenses]);
 
             return (
                 <div className="space-y-6 animate-pop">
-                    <div className="w-full h-48 rounded-[30px] p-6 relative overflow-hidden shadow-3d-hover transition-transform hover:scale-[1.02] duration-300">
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/10 backdrop-blur-xl border border-white/30 z-0"></div>
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
-                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
+                    <div className="w-full rounded-[30px] p-6 relative overflow-hidden shadow-3d-hover transition-transform hover:scale-[1.02] duration-300">
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 z-0"></div>
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full blur-xl animate-blob"></div>
+                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-300 opacity-20 rounded-full blur-xl animate-blob animation-delay-2000"></div>
                         
                         <div className="relative z-10 flex flex-col justify-between h-full text-white">
-                            <div className="flex justify-between items-start">
+                            <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <p className="text-xs font-medium text-white/80 uppercase tracking-wider">សាច់ប្រាក់សរុប</p>
-                                    <h2 className="text-3xl font-bold mt-1 drop-shadow-sm">{formatMoney(totalKHR, 'KHR')}</h2>
+                                    <p className="text-xs font-medium text-white/80 uppercase tracking-wider">សរុបទាំងអស់ (គិតជាខ្មែរ)</p>
+                                    <h2 className="text-3xl font-bold mt-1 drop-shadow-sm">{formatMoney(grandTotal, 'KHR')}</h2>
                                 </div>
                                 <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm"><Icon name="credit-card" className="w-6 h-6"/></div>
                             </div>
-                            <div className="flex justify-between items-end">
-                                <div className="bg-black/10 px-3 py-1 rounded-lg backdrop-blur-sm border border-white/10">
-                                    <span className="text-sm font-medium">≈ {formatMoney(totalUSD, 'USD')}</span>
+                            
+                            <div className="flex gap-3 mb-2">
+                                <div className="bg-white/10 px-3 py-1.5 rounded-lg backdrop-blur-sm border border-white/10 flex-1">
+                                    <p className="text-[10px] text-white/70">ប្រាក់រៀល</p>
+                                    <p className="text-sm font-bold">{formatMoney(totalKHR, 'KHR')}</p>
                                 </div>
-                                <p className="text-[10px] text-white/70">{new Date().toLocaleDateString('km-KH')}</p>
+                                <div className="bg-white/10 px-3 py-1.5 rounded-lg backdrop-blur-sm border border-white/10 flex-1">
+                                    <p className="text-[10px] text-white/70">ប្រាក់ដុល្លារ</p>
+                                    <p className="text-sm font-bold">{formatMoney(totalUSD, 'USD')}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end">
+                                <p className="text-[10px] text-white/70 bg-black/20 px-2 py-0.5 rounded flex items-center gap-1">
+                                    <Icon name="calendar" className="w-3 h-3" />
+                                    {new Date().toLocaleDateString('km-KH', { month: 'long', year: 'numeric' })}
+                                </p>
                             </div>
                         </div>
                     </div>
 
                     <div>
                         <div className="flex justify-between items-end mb-4 px-2">
-                            <h3 className="text-lg font-bold text-gray-800">ប្រតិបត្តិការថ្មីៗ</h3>
+                            <h3 className="text-lg font-bold text-gray-800">ប្រតិបត្តិការខែនេះ</h3>
                             <button onClick={()=>setView('reports')} className="text-blue-500 text-xs font-bold hover:underline">មើលទាំងអស់</button>
                         </div>
-                        {loading ? <div className="space-y-3">{[1,2].map(i=><div key={i} className="h-20 bg-white rounded-2xl animate-pulse"></div>)}</div> : expenses.length===0 ? <div className="text-center py-10 bg-white/50 rounded-3xl"><p className="text-gray-400 text-sm">គ្មានទិន្នន័យ</p></div> : 
+                        {loading ? <div className="space-y-3">{[1,2].map(i=><div key={i} className="h-20 bg-white rounded-2xl animate-pulse"></div>)}</div> : currentMonthExpenses.length===0 ? <div className="text-center py-10 bg-white/50 rounded-3xl"><p className="text-gray-400 text-sm">គ្មានទិន្នន័យសម្រាប់ខែនេះ</p></div> : 
                         <div className="space-y-3">
-                            {expenses.slice(0,10).map((item, idx)=>(
+                            {currentMonthExpenses.slice(0,10).map((item, idx)=>(
                                 <div onClick={()=>onEdit(item)} key={item.id} className="bg-white p-4 rounded-2xl shadow-soft flex justify-between items-center cursor-pointer transition-all hover:translate-y-[-2px] hover:shadow-lg animate-pop" style={{animationDelay: `${idx*0.05}s`}}>
                                     <div className="flex items-center gap-4">
                                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${CATEGORIES.find(c=>c.id===item.category)?.bg} ${CATEGORIES.find(c=>c.id===item.category)?.color}`}>
@@ -661,7 +617,7 @@
                     <form onSubmit={save} className="space-y-5">
                         <div className="glass-input p-1 rounded-2xl flex items-center">
                             <div className="p-3 text-gray-400"><Icon name="type" className="w-5 h-5"/></div>
-                            <input required value={form.title} onChange={e=>setForm({...form, title: e.target.value})} className="bg-transparent w-full outline-none text-gray-700 font-medium" placeholder="ឈ្មោះចំណាយ (ឧ. កាហ្វេ)" />
+                            <input required value={form.title} onChange={e=>setForm({...form, title: e.target.value})} className="bg-transparent w-full outline-none text-gray-700 font-medium" placeholder="ឈ្មោះចំណាយ" />
                         </div>
                         <div className="flex gap-3">
                             <div className="glass-input p-1 rounded-2xl flex items-center flex-1">
@@ -698,27 +654,109 @@
         };
 
         const ReportsView = ({ expenses }) => {
-            const analysis = useMemo(() => {
-                let total = 0; const cats = {};
-                expenses.forEach(e => { const v = parseFloat(e.amount)/(e.currency==='USD'?1:EXCHANGE_RATE); total += v; const k = e.category; cats[k] = (cats[k]||0)+v; });
-                return { total, cats: Object.entries(cats).map(([k,v])=>({name: CATEGORIES.find(c=>c.id===k)?.name||k, val: v, pct: (v/total)*100})).sort((a,b)=>b.val-a.val) };
-            }, [expenses]);
+            const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+            const [compareMonth, setCompareMonth] = useState("");
+            const [isCustomCompare, setIsCustomCompare] = useState(false);
+
+            const getMonthName = (dateStr) => new Date(dateStr + "-01").toLocaleDateString('km-KH', { month: 'long', year: 'numeric' });
+
+            const calculateStats = (monthStr) => {
+                const filtered = expenses.filter(e => e.date.startsWith(monthStr));
+                let totalKHR = 0; let totalUSD = 0; 
+                const cats = {};
+
+                filtered.forEach(e => {
+                    const amt = parseFloat(e.amount)||0;
+                    if(e.currency==='USD') { 
+                        totalUSD += amt; 
+                    } else { 
+                        totalKHR += amt; 
+                    }
+                    
+                    // Normalize to KHR just for category %
+                    const valInKHR = e.currency === 'USD' ? amt * EXCHANGE_RATE : amt;
+                    cats[e.category] = (cats[e.category]||0) + valInKHR;
+                });
+
+                const grandTotal = totalKHR + (totalUSD * EXCHANGE_RATE);
+
+                return { 
+                    totalKHR, 
+                    totalUSD, 
+                    grandTotal,
+                    categories: Object.entries(cats)
+                        .map(([k,v])=>({
+                            name: CATEGORIES.find(c=>c.id===k)?.name||k, 
+                            val: v, 
+                            pct: grandTotal > 0 ? (v/grandTotal)*100 : 0
+                        }))
+                        .sort((a,b)=>b.val-a.val) 
+                };
+            };
+
+            const currentStats = useMemo(() => calculateStats(selectedMonth), [selectedMonth, expenses]);
+            const prevMonthDate = new Date(selectedMonth + "-01"); prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+            const targetCompareMonth = isCustomCompare && compareMonth ? compareMonth : prevMonthDate.toISOString().slice(0, 7);
+            const compareStats = useMemo(() => calculateStats(targetCompareMonth), [targetCompareMonth, expenses]);
+            
+            const diffVal = currentStats.grandTotal - compareStats.grandTotal;
+            const isIncrease = diffVal > 0;
+            const percentChange = compareStats.grandTotal > 0 ? ((diffVal / compareStats.grandTotal) * 100) : 0;
+
+            const downloadPDF = () => generatePDF('report-content', `report-${selectedMonth}.pdf`);
+
             return (
                 <div className="animate-pop bg-white rounded-[40px] shadow-3d p-6 mt-10 min-h-[500px]">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">របាយការណ៍</h2>
-                    <div className="bg-blue-50 rounded-3xl p-6 text-center mb-8 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-20 h-20 bg-blue-200 rounded-full blur-xl opacity-50 -mr-6 -mt-6"></div>
-                        <p className="text-blue-500 font-bold text-xs uppercase tracking-wider">សរុបចំណាយ</p>
-                        <h2 className="text-3xl font-extrabold text-blue-600 mt-2">{formatMoney(analysis.total * EXCHANGE_RATE, 'KHR')}</h2>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold text-gray-800">របាយការណ៍</h2>
+                        <button onClick={downloadPDF} className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-100"><Icon name="file-text" className="w-5 h-5" /></button>
                     </div>
+
+                    <div className="glass-input p-4 rounded-2xl mb-6">
+                        <label className="text-xs text-gray-400 font-bold block mb-1">ជ្រើសរើសខែ</label>
+                        <input type="month" value={selectedMonth} onChange={e=>setSelectedMonth(e.target.value)} className="w-full bg-transparent font-bold text-gray-700 outline-none" />
+                        <div className="flex items-center gap-2 mt-3">
+                            <input type="checkbox" checked={isCustomCompare} onChange={e=>setIsCustomCompare(e.target.checked)} />
+                            <label className="text-xs text-gray-500">ធៀបខែផ្សេង</label>
+                        </div>
+                        {isCustomCompare && <input type="month" value={compareMonth} onChange={e=>setCompareMonth(e.target.value)} className="w-full mt-2 bg-transparent border-t pt-2 text-sm text-gray-600 outline-none" />}
+                    </div>
+
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl p-6 text-center mb-6 relative overflow-hidden text-white shadow-lg">
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-20 rounded-full blur-xl -mr-6 -mt-6"></div>
+                        <p className="font-bold text-xs uppercase tracking-wider text-white/80">សរុប ({getMonthName(selectedMonth)})</p>
+                        <h2 className="text-3xl font-extrabold mt-2 drop-shadow-md">{formatMoney(currentStats.grandTotal, 'KHR')}</h2>
+                        
+                        <div className="flex justify-center gap-4 mt-4 border-t border-white/20 pt-3">
+                            <div>
+                                <p className="text-[10px] text-white/70">ប្រាក់រៀល</p>
+                                <p className="font-bold text-sm">{formatMoney(currentStats.totalKHR, 'KHR')}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-white/70">ប្រាក់ដុល្លារ</p>
+                                <p className="font-bold text-sm">{formatMoney(currentStats.totalUSD, 'USD')}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mb-6 p-4 rounded-2xl border border-gray-100">
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <p className="text-xs text-gray-400 uppercase font-bold">ធៀបនឹង {getMonthName(targetCompareMonth)}</p>
+                                <p className={`text-lg font-bold ${isIncrease?'text-red-500':'text-emerald-500'}`}>{isIncrease?'+':''}{percentChange.toFixed(1)}%</p>
+                            </div>
+                            <p className="text-sm font-bold text-gray-600">{formatMoney(compareStats.grandTotal, 'KHR')}</p>
+                        </div>
+                    </div>
+
                     <div className="space-y-4">
-                        {analysis.cats.map((c, i)=>(
+                        {currentStats.categories.map((c, i)=>(
                             <div key={i} className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-blue-500 font-bold shadow-inner">{c.pct.toFixed(0)}%</div>
                                 <div className="flex-1">
                                     <div className="flex justify-between mb-1">
                                         <span className="font-bold text-gray-700">{c.name}</span>
-                                        <span className="text-gray-500 text-sm">{formatMoney(c.val * EXCHANGE_RATE, 'KHR')}</span>
+                                        <span className="text-gray-500 text-sm">{formatMoney(c.val, 'KHR')}</span>
                                     </div>
                                     <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                                         <div className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full" style={{width: `${c.pct}%`}}></div>
@@ -727,6 +765,54 @@
                             </div>
                         ))}
                     </div>
+
+                    {/* PDF Template */}
+                    <div id="report-content" className="pdf-content">
+                        <div className="text-center mb-8 border-b pb-4"><h1 className="text-3xl font-bold">របាយការណ៍</h1><p>ខែ: {getMonthName(selectedMonth)}</p></div>
+                        
+                        <div className="mb-6 p-4 bg-gray-100 rounded-xl text-center">
+                            <p>សរុបរួម (គិតជាប្រាក់រៀល)</p>
+                            <h2 className="text-2xl font-bold">{formatMoney(currentStats.grandTotal, 'KHR')}</h2>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-8">
+                            <div className="p-4 border rounded"><p>សរុប (រៀល)</p><p className="text-xl font-bold">{formatMoney(currentStats.totalKHR, 'KHR')}</p></div>
+                            <div className="p-4 border rounded"><p>សរុប (ដុល្លារ)</p><p className="text-xl font-bold">{formatMoney(currentStats.totalUSD, 'USD')}</p></div>
+                        </div>
+                        <table className="w-full text-sm"><thead><tr className="text-left"><th className="pb-2">ប្រភេទ</th><th className="pb-2 text-right">ចំនួន (សរុបជាខ្មែរ)</th></tr></thead><tbody>{currentStats.categories.map((c,i)=><tr key={i} className="border-b"><td className="py-2">{c.name}</td><td className="py-2 text-right">{formatMoney(c.val, 'KHR')}</td></tr>)}</tbody></table>
+                    </div>
+                </div>
+            );
+        };
+
+        const ProfileSettings = ({ user, userProfile, triggerConfirm }) => { /* Same as previous */
+             const [loading, setLoading] = useState(false);
+            const fileRef = useRef(null);
+            const handleUpload = async (e) => {
+                if (!e.target.files[0]) return;
+                triggerConfirm('ប្តូររូបភាព?', 'តើអ្នកចង់ប្តូររូបភាព Profile មែនទេ?', async () => {
+                    setLoading(true);
+                    try {
+                        const url = await uploadToCloudinary(e.target.files[0]);
+                        await updateProfile(user, { photoURL: url });
+                        await update(ref(db, `artifacts/${appId}/users/${user.uid}/profile`), { photoURL: url });
+                    } catch (err) { alert(err.message); } finally { setLoading(false); }
+                }, 'info');
+            };
+            const confirmLogout = () => triggerConfirm('ចាកចេញ?', 'តើអ្នកពិតជាចង់ចាកចេញពីគណនីនេះមែនទេ?', () => signOut(auth));
+
+            return (
+                <div className="animate-pop pt-24 px-6 flex flex-col items-center">
+                    <div className="relative group cursor-pointer w-32 h-32 mb-6" onClick={() => !loading && fileRef.current.click()}>
+                        <div className="w-full h-full rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white relative">
+                            {loading ? <div className="absolute inset-0 flex items-center justify-center bg-slate-100"><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div> : <img src={userProfile?.photoURL || 'https://via.placeholder.com/150'} className="w-full h-full object-cover" />}
+                        </div>
+                        <div className="absolute bottom-2 right-2 bg-blue-500 p-2 rounded-full text-white border-2 border-white shadow-md"><Icon name="camera" className="w-4 h-4" /></div>
+                        <input type="file" ref={fileRef} onChange={handleUpload} accept="image/*" style={{display: 'none'}} />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white drop-shadow-md">{userProfile?.displayName}</h2>
+                    <p className="text-white/80 mb-8">{userProfile?.email}</p>
+                    <button onClick={confirmLogout} className="w-full py-4 bg-white/20 backdrop-blur-md border border-white/40 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-white/30 transition-all"><Icon name="log-out" className="w-5 h-5" /> ចាកចេញ</button>
                 </div>
             );
         };
@@ -737,7 +823,7 @@
             </button>
         );
 
-        const FrozenScreen = () => (
+        const FrozenScreen = () => ( /* Keeping logic but updating style */
             <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-red-50 text-center animate-pop">
                 <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mb-6 text-red-500 shadow-lg shadow-red-200"><Icon name="lock" className="w-12 h-12" /></div>
                 <h2 className="text-3xl font-bold text-gray-800 mb-2">គណនីត្រូវបានបង្កក!</h2>
@@ -749,8 +835,8 @@
             </div>
         );
 
-        const AdminPanel = ({ triggerConfirm }) => {
-            const [users, setUsers] = useState([]);
+        const AdminPanel = ({ triggerConfirm }) => { /* ... Same Admin Logic ... */
+             const [users, setUsers] = useState([]);
             const [loading, setLoading] = useState(true);
             useEffect(() => {
                 const unsub = onValue(ref(db, `artifacts/${appId}/users`), (snap) => {
@@ -759,7 +845,6 @@
                 });
                 return () => unsub();
             }, []);
-            
             const toggleStatus = (u) => {
                 const action = u.status === 'frozen' ? 'បើកដំណើរការវិញ' : 'បង្កក';
                 const type = u.status === 'frozen' ? 'info' : 'danger';
@@ -767,7 +852,6 @@
                     await update(ref(db, `artifacts/${appId}/users/${u.uid}/profile`), { status: u.status === 'frozen' ? 'active' : 'frozen' });
                 }, type);
             };
-
             return (
                 <div className="animate-pop pt-20 px-4 pb-24">
                     <h2 className="text-2xl font-bold text-white mb-6 drop-shadow-md">Admin Panel</h2>
@@ -776,10 +860,7 @@
                             <div key={idx} className="bg-white p-4 rounded-2xl shadow-lg flex justify-between items-center">
                                 <div className="flex items-center gap-3">
                                     <div className={`w-3 h-3 rounded-full ${u.status === 'frozen' ? 'bg-red-500' : 'bg-green-500'}`}></div>
-                                    <div>
-                                        <h4 className="font-bold text-gray-800 text-sm">{u.displayName}</h4>
-                                        <p className="text-xs text-gray-400">{u.email}</p>
-                                    </div>
+                                    <div><h4 className="font-bold text-gray-800 text-sm">{u.displayName}</h4><p className="text-xs text-gray-400">{u.email}</p></div>
                                 </div>
                                 {u.role !== 'admin' && <button onClick={() => toggleStatus(u)} className="p-2 bg-gray-100 rounded-lg"><Icon name={u.status === 'frozen' ? 'unlock' : 'lock'} className="w-4 h-4 text-gray-600" /></button>}
                             </div>
