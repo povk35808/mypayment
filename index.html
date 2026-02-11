@@ -37,6 +37,7 @@
                         'blob': 'blob 7s infinite',
                         'pop': 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
                         'slideUp': 'slideUp 0.5s ease-out forwards',
+                        'slideDown': 'slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
                     },
                     keyframes: {
                         float: {
@@ -55,6 +56,10 @@
                         },
                         slideUp: {
                             '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideDown: {
+                            '0%': { opacity: '0', transform: 'translateY(-100%)' },
                             '100%': { opacity: '1', transform: 'translateY(0)' },
                         }
                     }
@@ -131,15 +136,6 @@
             border-radius: 12px;
             padding: 15px;
         }
-        
-        /* Toast Notification Animation */
-        @keyframes slideInBottom {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .toast-enter {
-            animation: slideInBottom 0.3s ease-out forwards;
-        }
     </style>
 </head>
 <body>
@@ -186,43 +182,57 @@
             }
         };
 
+        // Improved generatePDF with Blob URL generation for "Open" functionality
         const generatePDF = async (elementId, filename, setDownloading, onSuccess) => {
             setDownloading(true);
             
-            // Allow UI to update to show loading spinner
             await new Promise(resolve => setTimeout(resolve, 100));
 
             const element = document.getElementById(elementId);
             const opt = {
-                margin: 0, // Zero margin to let CSS handle it
+                margin: 0, 
                 filename: filename,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true }, // Higher scale for better quality
+                html2canvas: { scale: 2, useCORS: true }, 
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             
-            // Clone the element to display it for capture
             const clone = element.cloneNode(true);
             clone.style.display = 'block';
             
-            // Create a container off-screen
             const container = document.createElement('div');
             container.style.position = 'absolute';
             container.style.top = '-9999px';
             container.style.left = '0';
-            container.style.width = '794px'; // Force A4 width
+            container.style.width = '794px'; 
             container.appendChild(clone);
             document.body.appendChild(container);
             
             try {
-                await html2pdf().set(opt).from(clone).save();
-                if(onSuccess) onSuccess();
+                // Use .toPdf().get('pdf') to access internal jsPDF object
+                // This allows us to both SAVE and CREATE BLOB URL
+                const worker = html2pdf().set(opt).from(clone).toPdf();
+                
+                worker.get('pdf').then((pdf) => {
+                    // 1. Trigger Download
+                    pdf.save(filename);
+                    
+                    // 2. Create Blob URL for immediate opening
+                    const blob = pdf.output('blob');
+                    const url = URL.createObjectURL(blob);
+                    
+                    if(onSuccess) onSuccess(url, filename);
+                });
+
             } catch (error) {
                 console.error("PDF Generation Error:", error);
                 alert("មានបញ្ហាក្នុងការបង្កើត PDF");
             } finally {
-                document.body.removeChild(container);
-                setDownloading(false);
+                // Wait a bit before cleanup to ensure rendering finished
+                setTimeout(() => {
+                    document.body.removeChild(container);
+                    setDownloading(false);
+                }, 1000);
             }
         };
         
@@ -276,18 +286,51 @@
             </a>
         );
 
-        // Toast Notification Component
-        const Toast = ({ message, type, onClose }) => {
+        // --- Custom Toast Component (Redesigned) ---
+        const Toast = ({ message, filename, fileUrl, onClose }) => {
             useEffect(() => {
-                const timer = setTimeout(onClose, 3000);
+                // Auto hide after 6 seconds
+                const timer = setTimeout(onClose, 6000);
                 return () => clearTimeout(timer);
             }, []);
 
+            const handleOpen = () => {
+                if(fileUrl) {
+                    window.open(fileUrl, '_blank');
+                }
+            };
+
             return (
-                <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-[60] toast-enter">
-                    <div className={`px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 ${type === 'success' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`}>
-                        <Icon name={type === 'success' ? 'check-circle' : 'info'} className="w-5 h-5" />
-                        <span className="font-bold text-sm">{message}</span>
+                <div className="fixed top-4 left-4 right-4 z-[9999] animate-slideDown flex justify-center pointer-events-none">
+                    <div 
+                        className="bg-[#2D2D2D] text-white p-3 rounded-lg shadow-2xl flex items-center justify-between gap-3 w-full max-w-sm pointer-events-auto border border-gray-700/50 backdrop-blur-md"
+                        onClick={handleOpen}
+                    >
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            {/* PDF Icon */}
+                            <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center shrink-0">
+                                <Icon name="file-text" className="w-6 h-6 text-red-500" />
+                            </div>
+                            
+                            {/* Text Info */}
+                            <div className="flex flex-col min-w-0">
+                                <p className="font-bold text-sm truncate">{filename || 'Document.pdf'}</p>
+                                <div className="flex items-center gap-1.5">
+                                    <Icon name="check-circle" className="w-3 h-3 text-green-400" />
+                                    <p className="text-xs text-gray-300">{message}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Open Button/Link */}
+                        <div className="shrink-0 pl-2 border-l border-gray-600">
+                             <button 
+                                onClick={(e) => { e.stopPropagation(); handleOpen(); }}
+                                className="text-blue-400 font-bold text-sm hover:text-blue-300 px-2 py-1"
+                            >
+                                បើក
+                            </button>
+                        </div>
                     </div>
                 </div>
             );
@@ -321,7 +364,7 @@
             const [userProfile, setUserProfile] = useState(null);
             const [toast, setToast] = useState(null); // Global Toast
 
-            const showToast = (message, type = 'success') => setToast({ message, type });
+            const showToast = (message, filename, fileUrl) => setToast({ message, filename, fileUrl });
 
             useEffect(() => {
                 const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -347,7 +390,14 @@
             
             return (
                 <>
-                    {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+                    {toast && (
+                        <Toast 
+                            message={toast.message} 
+                            filename={toast.filename} 
+                            fileUrl={toast.fileUrl} 
+                            onClose={() => setToast(null)} 
+                        />
+                    )}
                     {user ? <Dashboard user={user} userProfile={userProfile} showToast={showToast} /> : <AuthScreen />}
                 </>
             );
@@ -767,11 +817,12 @@
             const percentChange = compareStats.grandTotal > 0 ? ((diffVal / compareStats.grandTotal) * 100) : 0;
 
             const handleDownloadPDF = () => {
+                const filename = `report-${selectedMonth}.pdf`;
                 generatePDF(
                     'report-content', 
-                    `report-${selectedMonth}.pdf`, 
+                    filename, 
                     setDownloadingPdf, 
-                    () => showToast("Download ជោគជ័យ! សូមពិនិត្យមើលក្នុង File Manager។", "success")
+                    (url) => showToast("ទាញយកជោគជ័យ", filename, url)
                 );
             };
 
@@ -868,7 +919,6 @@
                                 <div>
                                     <p className="text-gray-500 text-xs font-bold uppercase">រៀបចំដោយ</p>
                                     <h3 className="text-xl font-bold text-gray-800">{userProfile?.displayName || 'Unknown User'}</h3>
-                                    <p className="text-gray-500 text-sm">{userProfile?.email}</p>
                                 </div>
                             </div>
 
