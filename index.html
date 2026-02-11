@@ -73,7 +73,6 @@
     <style>
         body {
             background-color: #e0e5ec;
-            /* Using the requested Blue/Purple gradient vibe */
             background-image: linear-gradient(to top, #dfe9f3 0%, white 100%);
             background-size: cover;
             background-attachment: fixed;
@@ -111,17 +110,35 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* PDF hidden styles */
+        /* PDF hidden styles - Enhanced for better look */
         .pdf-content {
             background: white;
-            padding: 40px;
+            padding: 0;
             display: none;
+            width: 794px; /* A4 Width in pixels at 96 DPI roughly, helps layout */
+            font-family: 'Kantumruy Pro', sans-serif;
         }
-        .text-gradient {
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-image: linear-gradient(to right, #3A7BD5, #00D2FF);
+        .pdf-header {
+            background: linear-gradient(135deg, #3A7BD5 0%, #00D2FF 100%);
+            padding: 30px;
+            color: white;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+        }
+        .pdf-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+        }
+        
+        /* Toast Notification Animation */
+        @keyframes slideInBottom {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .toast-enter {
+            animation: slideInBottom 0.3s ease-out forwards;
         }
     </style>
 </head>
@@ -169,27 +186,44 @@
             }
         };
 
-        const generatePDF = (elementId, filename) => {
+        const generatePDF = async (elementId, filename, setDownloading, onSuccess) => {
+            setDownloading(true);
+            
+            // Allow UI to update to show loading spinner
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             const element = document.getElementById(elementId);
             const opt = {
-                margin: 10,
+                margin: 0, // Zero margin to let CSS handle it
                 filename: filename,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
+                html2canvas: { scale: 2, useCORS: true }, // Higher scale for better quality
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
+            
+            // Clone the element to display it for capture
             const clone = element.cloneNode(true);
             clone.style.display = 'block';
-            clone.style.width = '700px';
+            
+            // Create a container off-screen
             const container = document.createElement('div');
             container.style.position = 'absolute';
             container.style.top = '-9999px';
+            container.style.left = '0';
+            container.style.width = '794px'; // Force A4 width
             container.appendChild(clone);
             document.body.appendChild(container);
             
-            html2pdf().set(opt).from(clone).save().then(() => {
+            try {
+                await html2pdf().set(opt).from(clone).save();
+                if(onSuccess) onSuccess();
+            } catch (error) {
+                console.error("PDF Generation Error:", error);
+                alert("មានបញ្ហាក្នុងការបង្កើត PDF");
+            } finally {
                 document.body.removeChild(container);
-            });
+                setDownloading(false);
+            }
         };
         
         const uploadToCloudinary = async (file) => {
@@ -242,6 +276,23 @@
             </a>
         );
 
+        // Toast Notification Component
+        const Toast = ({ message, type, onClose }) => {
+            useEffect(() => {
+                const timer = setTimeout(onClose, 3000);
+                return () => clearTimeout(timer);
+            }, []);
+
+            return (
+                <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-[60] toast-enter">
+                    <div className={`px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 ${type === 'success' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`}>
+                        <Icon name={type === 'success' ? 'check-circle' : 'info'} className="w-5 h-5" />
+                        <span className="font-bold text-sm">{message}</span>
+                    </div>
+                </div>
+            );
+        };
+
         const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, type = 'danger' }) => {
             if (!isOpen) return null;
             return (
@@ -268,6 +319,9 @@
             const [user, setUser] = useState(null);
             const [loading, setLoading] = useState(true);
             const [userProfile, setUserProfile] = useState(null);
+            const [toast, setToast] = useState(null); // Global Toast
+
+            const showToast = (message, type = 'success') => setToast({ message, type });
 
             useEffect(() => {
                 const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -290,12 +344,18 @@
             if (loading) return <div className="flex items-center justify-center min-h-screen bg-slate-900"><div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
             if (user && userProfile?.status === 'frozen') return <FrozenScreen />;
-            return user ? <Dashboard user={user} userProfile={userProfile} /> : <AuthScreen />;
+            
+            return (
+                <>
+                    {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+                    {user ? <Dashboard user={user} userProfile={userProfile} showToast={showToast} /> : <AuthScreen />}
+                </>
+            );
         };
 
-        // --- Auth Screen ---
+        // --- Auth Screen --- (Same as previous)
         const AuthScreen = () => {
-            const [isRegister, setIsRegister] = useState(false);
+             const [isRegister, setIsRegister] = useState(false);
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState('');
             const [confirmPassword, setConfirmPassword] = useState('');
@@ -425,7 +485,7 @@
         };
 
         // --- Dashboard ---
-        const Dashboard = ({ user, userProfile }) => {
+        const Dashboard = ({ user, userProfile, showToast }) => {
             const [view, setView] = useState('home');
             const [expenses, setExpenses] = useState([]);
             const [loading, setLoading] = useState(true);
@@ -470,7 +530,8 @@
 
                     <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-blue-500 to-purple-600 rounded-b-[40px] z-0"></div>
                     
-                    {/* Header */}
+                    {/* Header - Only Show on Home/Reports/Admin */}
+                    {view !== 'profile' && (
                     <div className="px-6 pt-6 pb-2 flex justify-between items-center z-10 text-white">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10 shadow-lg">
@@ -485,14 +546,15 @@
                             <img src={userProfile?.photoURL || 'https://via.placeholder.com/150'} className="w-full h-full object-cover" />
                         </div>
                     </div>
+                    )}
 
                     {/* Content */}
-                    <div className="flex-1 overflow-y-auto hide-scrollbar z-10 px-5 pt-2 pb-24">
+                    <div className={`flex-1 overflow-y-auto hide-scrollbar z-10 ${view === 'profile' ? 'bg-gray-50' : 'px-5 pt-2'} pb-24`}>
                         {view === 'home' && <HomeView expenses={expenses} onDelete={handleDelete} onEdit={handleEditClick} loading={loading} setView={setView} />}
                         {view === 'add' && <AddEditView user={user} setView={setView} editItem={editItem} setEditItem={setEditItem} />}
-                        {view === 'reports' && <ReportsView expenses={expenses} />}
+                        {view === 'reports' && <ReportsView expenses={expenses} userProfile={userProfile} showToast={showToast} />}
                         {view === 'admin' && isAdmin && <AdminPanel triggerConfirm={triggerConfirm} />}
-                        {view === 'profile' && <ProfileSettings user={user} userProfile={userProfile} triggerConfirm={triggerConfirm} />}
+                        {view === 'profile' && <ProfileSettings user={user} userProfile={userProfile} triggerConfirm={triggerConfirm} setView={setView} />}
                     </div>
 
                     {/* 3D Floating Bottom Nav */}
@@ -653,10 +715,11 @@
             );
         };
 
-        const ReportsView = ({ expenses }) => {
+        const ReportsView = ({ expenses, userProfile, showToast }) => {
             const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
             const [compareMonth, setCompareMonth] = useState("");
             const [isCustomCompare, setIsCustomCompare] = useState(false);
+            const [downloadingPdf, setDownloadingPdf] = useState(false);
 
             const getMonthName = (dateStr) => new Date(dateStr + "-01").toLocaleDateString('km-KH', { month: 'long', year: 'numeric' });
 
@@ -703,13 +766,29 @@
             const isIncrease = diffVal > 0;
             const percentChange = compareStats.grandTotal > 0 ? ((diffVal / compareStats.grandTotal) * 100) : 0;
 
-            const downloadPDF = () => generatePDF('report-content', `report-${selectedMonth}.pdf`);
+            const handleDownloadPDF = () => {
+                generatePDF(
+                    'report-content', 
+                    `report-${selectedMonth}.pdf`, 
+                    setDownloadingPdf, 
+                    () => showToast("Download ជោគជ័យ! សូមពិនិត្យមើលក្នុង File Manager។", "success")
+                );
+            };
 
             return (
                 <div className="animate-pop bg-white rounded-[40px] shadow-3d p-6 mt-10 min-h-[500px]">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-xl font-bold text-gray-800">របាយការណ៍</h2>
-                        <button onClick={downloadPDF} className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-100"><Icon name="file-text" className="w-5 h-5" /></button>
+                        <button 
+                            disabled={downloadingPdf}
+                            onClick={handleDownloadPDF} 
+                            className={`p-2 rounded-xl border transition-all ${downloadingPdf ? 'bg-gray-100 text-gray-400 cursor-wait' : 'bg-red-50 text-red-500 hover:bg-red-100 border-red-100'}`}
+                        >
+                            {downloadingPdf ? 
+                                <div className="w-5 h-5 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div> : 
+                                <Icon name="file-text" className="w-5 h-5" />
+                            }
+                        </button>
                     </div>
 
                     <div className="glass-input p-4 rounded-2xl mb-6">
@@ -766,28 +845,89 @@
                         ))}
                     </div>
 
-                    {/* PDF Template */}
+                    {/* PDF Template (Updated Design) */}
                     <div id="report-content" className="pdf-content">
-                        <div className="text-center mb-8 border-b pb-4"><h1 className="text-3xl font-bold">របាយការណ៍</h1><p>ខែ: {getMonthName(selectedMonth)}</p></div>
-                        
-                        <div className="mb-6 p-4 bg-gray-100 rounded-xl text-center">
-                            <p>សរុបរួម (គិតជាប្រាក់រៀល)</p>
-                            <h2 className="text-2xl font-bold">{formatMoney(currentStats.grandTotal, 'KHR')}</h2>
+                        {/* Header */}
+                        <div className="pdf-header flex justify-between items-center mb-8">
+                            <div>
+                                <h1 className="text-3xl font-bold mb-1">Expense 3D Pro</h1>
+                                <p className="opacity-90 text-sm">របាយការណ៍ចំណូលចំណាយប្រចាំខែ</p>
+                            </div>
+                            <div className="text-right">
+                                <h2 className="text-2xl font-bold">{getMonthName(selectedMonth)}</h2>
+                                <p className="opacity-80 text-sm">{new Date().toLocaleDateString('en-GB')}</p>
+                            </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 mb-8">
-                            <div className="p-4 border rounded"><p>សរុប (រៀល)</p><p className="text-xl font-bold">{formatMoney(currentStats.totalKHR, 'KHR')}</p></div>
-                            <div className="p-4 border rounded"><p>សរុប (ដុល្លារ)</p><p className="text-xl font-bold">{formatMoney(currentStats.totalUSD, 'USD')}</p></div>
+                        <div className="px-8 pb-8">
+                            {/* User Info */}
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-500">
+                                    <img src={userProfile?.photoURL || 'https://via.placeholder.com/150'} className="w-full h-full object-cover" />
+                                </div>
+                                <div>
+                                    <p className="text-gray-500 text-xs font-bold uppercase">រៀបចំដោយ</p>
+                                    <h3 className="text-xl font-bold text-gray-800">{userProfile?.displayName || 'Unknown User'}</h3>
+                                    <p className="text-gray-500 text-sm">{userProfile?.email}</p>
+                                </div>
+                            </div>
+
+                            {/* Summary Cards */}
+                            <div className="grid grid-cols-3 gap-4 mb-8">
+                                <div className="pdf-card text-center">
+                                    <p className="text-gray-500 text-xs font-bold uppercase mb-1">សរុបទាំងអស់ (រៀល)</p>
+                                    <h3 className="text-2xl font-bold text-blue-600">{formatMoney(currentStats.grandTotal, 'KHR')}</h3>
+                                </div>
+                                <div className="pdf-card text-center">
+                                    <p className="text-gray-500 text-xs font-bold uppercase mb-1">ចំណាយ (USD)</p>
+                                    <h3 className="text-xl font-bold text-gray-800">{formatMoney(currentStats.totalUSD, 'USD')}</h3>
+                                </div>
+                                <div className="pdf-card text-center">
+                                    <p className="text-gray-500 text-xs font-bold uppercase mb-1">ចំណាយ (KHR)</p>
+                                    <h3 className="text-xl font-bold text-gray-800">{formatMoney(currentStats.totalKHR, 'KHR')}</h3>
+                                </div>
+                            </div>
+
+                            {/* Table */}
+                            <h4 className="text-lg font-bold text-gray-800 mb-4 border-l-4 border-blue-500 pl-3">សង្ខេបតាមប្រភេទ</h4>
+                            <div className="overflow-hidden rounded-xl border border-gray-200 mb-8">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-gray-100 text-gray-600">
+                                        <tr>
+                                            <th className="py-3 px-4 text-left">ប្រភេទ</th>
+                                            <th className="py-3 px-4 text-center">ភាគរយ</th>
+                                            <th className="py-3 px-4 text-right">សរុប (គិតជាខ្មែរ)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {currentStats.categories.map((c,i)=>(
+                                            <tr key={i}>
+                                                <td className="py-3 px-4 font-medium text-gray-700">{c.name}</td>
+                                                <td className="py-3 px-4 text-center">
+                                                    <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-xs font-bold">{c.pct.toFixed(1)}%</span>
+                                                </td>
+                                                <td className="py-3 px-4 text-right font-bold text-gray-800">{formatMoney(c.val, 'KHR')}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="border-t pt-4 mt-8 text-center text-gray-400 text-xs">
+                                <p>Generated automatically by Expense 3D Pro</p>
+                                <p>Thank you for using our application!</p>
+                            </div>
                         </div>
-                        <table className="w-full text-sm"><thead><tr className="text-left"><th className="pb-2">ប្រភេទ</th><th className="pb-2 text-right">ចំនួន (សរុបជាខ្មែរ)</th></tr></thead><tbody>{currentStats.categories.map((c,i)=><tr key={i} className="border-b"><td className="py-2">{c.name}</td><td className="py-2 text-right">{formatMoney(c.val, 'KHR')}</td></tr>)}</tbody></table>
                     </div>
                 </div>
             );
         };
 
-        const ProfileSettings = ({ user, userProfile, triggerConfirm }) => { /* Same as previous */
-             const [loading, setLoading] = useState(false);
+        const ProfileSettings = ({ user, userProfile, triggerConfirm, setView }) => {
+            const [loading, setLoading] = useState(false);
             const fileRef = useRef(null);
+
             const handleUpload = async (e) => {
                 if (!e.target.files[0]) return;
                 triggerConfirm('ប្តូររូបភាព?', 'តើអ្នកចង់ប្តូររូបភាព Profile មែនទេ?', async () => {
@@ -802,17 +942,71 @@
             const confirmLogout = () => triggerConfirm('ចាកចេញ?', 'តើអ្នកពិតជាចង់ចាកចេញពីគណនីនេះមែនទេ?', () => signOut(auth));
 
             return (
-                <div className="animate-pop pt-24 px-6 flex flex-col items-center">
-                    <div className="relative group cursor-pointer w-32 h-32 mb-6" onClick={() => !loading && fileRef.current.click()}>
-                        <div className="w-full h-full rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white relative">
-                            {loading ? <div className="absolute inset-0 flex items-center justify-center bg-slate-100"><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div> : <img src={userProfile?.photoURL || 'https://via.placeholder.com/150'} className="w-full h-full object-cover" />}
-                        </div>
-                        <div className="absolute bottom-2 right-2 bg-blue-500 p-2 rounded-full text-white border-2 border-white shadow-md"><Icon name="camera" className="w-4 h-4" /></div>
-                        <input type="file" ref={fileRef} onChange={handleUpload} accept="image/*" style={{display: 'none'}} />
+                <div className="animate-pop min-h-screen relative bg-gray-50 pb-20">
+                    {/* Cover Photo */}
+                    <div className="relative h-48 w-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-b-[40px] shadow-lg overflow-hidden">
+                        <button onClick={() => setView('home')} className="absolute top-6 left-6 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all z-20">
+                            <Icon name="arrow-left" className="w-5 h-5" />
+                        </button>
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-300/20 rounded-full blur-2xl"></div>
                     </div>
-                    <h2 className="text-2xl font-bold text-white drop-shadow-md">{userProfile?.displayName}</h2>
-                    <p className="text-white/80 mb-8">{userProfile?.email}</p>
-                    <button onClick={confirmLogout} className="w-full py-4 bg-white/20 backdrop-blur-md border border-white/40 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-white/30 transition-all"><Icon name="log-out" className="w-5 h-5" /> ចាកចេញ</button>
+
+                    {/* Profile Card Overlay */}
+                    <div className="px-5 -mt-20">
+                        <div className="bg-white rounded-[30px] shadow-xl p-6 relative flex flex-col items-center">
+                            
+                            {/* Profile Picture */}
+                            <div className="relative -mt-20 mb-4 group cursor-pointer" onClick={() => !loading && fileRef.current.click()}>
+                                <div className="w-32 h-32 rounded-full border-[6px] border-white shadow-lg overflow-hidden bg-gray-200">
+                                    {loading ? 
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-100"><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div> 
+                                        : <img src={userProfile?.photoURL || 'https://via.placeholder.com/150'} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                                    }
+                                </div>
+                                <div className="absolute bottom-1 right-1 bg-blue-500 p-2.5 rounded-full text-white border-4 border-white shadow-md transition-transform group-hover:scale-110">
+                                    <Icon name="camera" className="w-4 h-4" />
+                                </div>
+                                <input type="file" ref={fileRef} onChange={handleUpload} accept="image/*" style={{display: 'none'}} />
+                            </div>
+
+                            {/* Basic Info */}
+                            <div className="text-center w-full pb-6 border-b border-gray-100">
+                                <h2 className="text-2xl font-bold text-gray-800">{userProfile?.displayName || "User"}</h2>
+                                <p className="text-gray-500 text-sm">{userProfile?.role === 'admin' ? 'Administrator' : 'Standard Member'}</p>
+                            </div>
+
+                            {/* Details List */}
+                            <div className="w-full space-y-4 mt-6">
+                                <div className="flex items-center gap-4 p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
+                                        <Icon name="mail" className="w-5 h-5" />
+                                    </div>
+                                    <div className="flex-1 overflow-hidden">
+                                        <p className="text-xs text-gray-400 font-medium uppercase">អ៊ីមែល</p>
+                                        <p className="text-sm font-semibold text-gray-700 truncate">{userProfile?.email}</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-4 p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-500">
+                                        <Icon name="calendar" className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-400 font-medium uppercase">ចូលរួមតាំងពី</p>
+                                        <p className="text-sm font-semibold text-gray-700">
+                                            {userProfile?.createdAt ? new Date(userProfile.createdAt).toLocaleDateString('km-KH') : 'N/A'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Logout Button */}
+                            <button onClick={confirmLogout} className="w-full py-4 mt-8 bg-red-50 text-red-500 font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-red-100 transition-colors border border-red-100">
+                                <Icon name="log-out" className="w-5 h-5" /> ចាកចេញ
+                            </button>
+                        </div>
+                    </div>
                 </div>
             );
         };
@@ -823,7 +1017,7 @@
             </button>
         );
 
-        const FrozenScreen = () => ( /* Keeping logic but updating style */
+        const FrozenScreen = () => ( 
             <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-red-50 text-center animate-pop">
                 <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mb-6 text-red-500 shadow-lg shadow-red-200"><Icon name="lock" className="w-12 h-12" /></div>
                 <h2 className="text-3xl font-bold text-gray-800 mb-2">គណនីត្រូវបានបង្កក!</h2>
@@ -835,7 +1029,7 @@
             </div>
         );
 
-        const AdminPanel = ({ triggerConfirm }) => { /* ... Same Admin Logic ... */
+        const AdminPanel = ({ triggerConfirm }) => { 
              const [users, setUsers] = useState([]);
             const [loading, setLoading] = useState(true);
             useEffect(() => {
@@ -853,8 +1047,13 @@
                 }, type);
             };
             return (
-                <div className="animate-pop pt-20 px-4 pb-24">
-                    <h2 className="text-2xl font-bold text-white mb-6 drop-shadow-md">Admin Panel</h2>
+                <div className="animate-pop pt-10 px-4 pb-24">
+                     {/* Added a Header specific for Admin view to ensure it looks good with the new layout */}
+                    <div className="bg-white p-6 rounded-3xl shadow-lg mb-6">
+                         <h2 className="text-2xl font-bold text-gray-800 mb-1">ផ្ទាំងគ្រប់គ្រង (Admin)</h2>
+                         <p className="text-gray-500 text-sm">គ្រប់គ្រងអ្នកប្រើប្រាស់នៅក្នុងប្រព័ន្ធ</p>
+                    </div>
+
                     <div className="space-y-3">
                         {users.map((u, idx) => (
                             <div key={idx} className="bg-white p-4 rounded-2xl shadow-lg flex justify-between items-center">
