@@ -295,8 +295,17 @@
             }, []);
 
             const handleOpen = () => {
-                if(fileUrl) {
-                    window.open(fileUrl, '_blank');
+                if (fileUrl) {
+                    // Create a temporary link element
+                    const link = document.createElement('a');
+                    link.href = fileUrl;
+                    // On mobile WebViews, _blank is often necessary to trigger the PDF viewer
+                    link.target = '_blank';
+                    // We don't set 'download' attribute here because we want to try to VIEW it first.
+                    // If the browser cannot view it, it will usually fall back to download.
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
                 }
             };
 
