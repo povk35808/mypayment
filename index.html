@@ -182,7 +182,7 @@
             }
         };
 
-        // Improved generatePDF with Blob URL generation for "Open" functionality
+        // Improved generatePDF with Blob generation for Share
         const generatePDF = async (elementId, filename, setDownloading, onSuccess) => {
             setDownloading(true);
             
@@ -210,25 +210,24 @@
             
             try {
                 // Use .toPdf().get('pdf') to access internal jsPDF object
-                // This allows us to both SAVE and CREATE BLOB URL
                 const worker = html2pdf().set(opt).from(clone).toPdf();
                 
                 worker.get('pdf').then((pdf) => {
-                    // 1. Trigger Download
+                    // 1. Trigger Download (might work on some Androids/Desktop)
                     pdf.save(filename);
                     
-                    // 2. Create Blob URL for immediate opening
+                    // 2. Create Blob for Mobile Share
                     const blob = pdf.output('blob');
                     const url = URL.createObjectURL(blob);
                     
-                    if(onSuccess) onSuccess(url, filename);
+                    // Pass blob specifically for sharing
+                    if(onSuccess) onSuccess(url, filename, blob);
                 });
 
             } catch (error) {
                 console.error("PDF Generation Error:", error);
                 alert("មានបញ្ហាក្នុងការបង្កើត PDF");
             } finally {
-                // Wait a bit before cleanup to ensure rendering finished
                 setTimeout(() => {
                     document.body.removeChild(container);
                     setDownloading(false);
@@ -286,42 +285,56 @@
             </a>
         );
 
-        // --- Custom Toast Component (Redesigned) ---
-        const Toast = ({ message, filename, fileUrl, onClose }) => {
+        // --- Custom Toast Component (With Share Button) ---
+        const Toast = ({ message, filename, fileUrl, fileBlob, onClose }) => {
             useEffect(() => {
-                // Auto hide after 6 seconds
-                const timer = setTimeout(onClose, 6000);
+                const timer = setTimeout(onClose, 8000); // Increased time to allow action
                 return () => clearTimeout(timer);
             }, []);
 
             const handleOpen = () => {
                 if (fileUrl) {
-                    // Create a temporary link element
                     const link = document.createElement('a');
                     link.href = fileUrl;
-                    // On mobile WebViews, _blank is often necessary to trigger the PDF viewer
                     link.target = '_blank';
-                    // We don't set 'download' attribute here because we want to try to VIEW it first.
-                    // If the browser cannot view it, it will usually fall back to download.
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
                 }
             };
 
+            const handleShare = async () => {
+                if (fileBlob && navigator.share) {
+                    try {
+                        const file = new File([fileBlob], filename, { type: 'application/pdf' });
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Expense Report',
+                                text: `នេះជារបាយការណ៍ចំណាយប្រចាំខែរបស់ខ្ញុំ (${filename})`
+                            });
+                        } else {
+                            alert("ឧបករណ៍របស់អ្នកមិនគាំទ្រការ Share ឯកសារទេ");
+                        }
+                    } catch (error) {
+                        // User cancelled share or other error, ignore
+                        console.log("Share cancelled or failed", error);
+                    }
+                } else {
+                    alert("Browser នេះមិនគាំទ្រមុខងារ Share ទេ");
+                }
+            };
+
             return (
                 <div className="fixed top-4 left-4 right-4 z-[9999] animate-slideDown flex justify-center pointer-events-none">
                     <div 
-                        className="bg-[#2D2D2D] text-white p-3 rounded-lg shadow-2xl flex items-center justify-between gap-3 w-full max-w-sm pointer-events-auto border border-gray-700/50 backdrop-blur-md"
-                        onClick={handleOpen}
+                        className="bg-[#2D2D2D] text-white p-3 rounded-xl shadow-2xl flex items-center justify-between gap-3 w-full max-w-sm pointer-events-auto border border-gray-700/50 backdrop-blur-md"
                     >
-                        <div className="flex items-center gap-3 overflow-hidden">
-                            {/* PDF Icon */}
-                            <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center shrink-0">
+                        <div className="flex items-center gap-3 overflow-hidden" onClick={handleOpen}>
+                            <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center shrink-0">
                                 <Icon name="file-text" className="w-6 h-6 text-red-500" />
                             </div>
                             
-                            {/* Text Info */}
                             <div className="flex flex-col min-w-0">
                                 <p className="font-bold text-sm truncate">{filename || 'Document.pdf'}</p>
                                 <div className="flex items-center gap-1.5">
@@ -331,13 +344,20 @@
                             </div>
                         </div>
 
-                        {/* Open Button/Link */}
-                        <div className="shrink-0 pl-2 border-l border-gray-600">
+                        <div className="flex items-center gap-2 pl-2 border-l border-gray-600">
                              <button 
-                                onClick={(e) => { e.stopPropagation(); handleOpen(); }}
-                                className="text-blue-400 font-bold text-sm hover:text-blue-300 px-2 py-1"
+                                onClick={handleShare}
+                                className="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-lg flex items-center justify-center transition-colors"
+                                title="Share to Telegram"
                             >
-                                បើក
+                                <Icon name="share-2" className="w-4 h-4" />
+                            </button>
+                             <button 
+                                onClick={handleOpen}
+                                className="text-gray-400 hover:text-white p-2"
+                                title="Open"
+                            >
+                                <Icon name="external-link" className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
@@ -373,7 +393,7 @@
             const [userProfile, setUserProfile] = useState(null);
             const [toast, setToast] = useState(null); // Global Toast
 
-            const showToast = (message, filename, fileUrl) => setToast({ message, filename, fileUrl });
+            const showToast = (message, filename, fileUrl, fileBlob) => setToast({ message, filename, fileUrl, fileBlob });
 
             useEffect(() => {
                 const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -404,6 +424,7 @@
                             message={toast.message} 
                             filename={toast.filename} 
                             fileUrl={toast.fileUrl} 
+                            fileBlob={toast.fileBlob}
                             onClose={() => setToast(null)} 
                         />
                     )}
@@ -831,7 +852,7 @@
                     'report-content', 
                     filename, 
                     setDownloadingPdf, 
-                    (url) => showToast("ទាញយកជោគជ័យ", filename, url)
+                    (url, fname, blob) => showToast("ទាញយកជោគជ័យ", fname, url, blob)
                 );
             };
 
